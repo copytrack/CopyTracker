@@ -2,8 +2,8 @@
 
 $dbname = "copytrack";
 $dbhost = "localhost";
-$dbuser = "root";
-$dbpasswd = "copy391200";
+$dbuser = "";
+$dbpasswd = "";
 
 function filter($content)
 {

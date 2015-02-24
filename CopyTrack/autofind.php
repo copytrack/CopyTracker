@@ -5,8 +5,8 @@ ini_set('memory_limit', '128M');
 
 $dbname = "copytrack";
 $dbhost = "localhost";
-$dbuser = "root";
-$dbpasswd = "copy391200";
+$dbuser = "";
+$dbpasswd = "";
 
 $dbconn = ($GLOBALS["___mysqli_ston"] = mysqli_connect($dbhost,  $dbuser,  $dbpasswd)) or die("Couldn't Connect");
 mysql_set_charset('utf8',$dbconn); // Necessary for char data to be pulled from db with correct charset.
