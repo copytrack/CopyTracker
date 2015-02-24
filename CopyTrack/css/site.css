@@ -1,0 +1,303 @@
+
+a {
+	color:#00bff3;
+	text-decoration:none;
+}
+
+a:hover, a:active {
+	text-decoration:underline;
+}
+
+#shell {
+	margin:0 auto;
+}
+
+#header {
+	margin-top:16px;
+}
+
+#main {
+	
+}
+
+h1 {
+	color:#fff;
+	font-family:'Vegur',Tahoma;
+	background:#444;
+	padding:8px;
+	font-size:2em;
+}
+
+h2 {
+	border-bottom:1px solid #444;
+	font-size:1.5em;
+}
+
+h3 {
+	font-size:1.3em;
+	border-bottom:1px dotted #777;
+}
+
+h4 {
+	font-size:1.15em;
+	border-bottom:1px dashed #999;
+}
+
+dt { paddnig:4px;margin-bottom:5px;float:left;font-size:1.25em; }
+dd { padding:4px;margin:0 0 5px 0;font-size:1.25em;color:#666; } 
+dl.w25 dt { width:25%; } dl.w25 dd { margin-left:25%; }
+dl.w33 dt { width:33%; } dl.w33 dd { margin-left:33%; }
+dl.w40 dt { width:40%; } dl.w40 dd { margin-left:40%; }
+dl.w50 dt { width:50%; } dl.w50 dd { margin-left:50%; }
+dl.w66 dt { width:66%; } dl.w66 dd { margin-left:66%; }
+dl.w75 dt { width:75%; } dl.w75 dd { margin-left:75%; }
+
+.menu1, .menu3 {
+	margin:0px;
+	padding:0px;
+}
+
+.menu1 li, .menu3 li {
+	list-style-type:none;
+	margin:0px;
+}
+
+.menu1 img {
+	vertical-align:middle;
+}
+
+.menu1 a {
+	display:block;
+	padding:6px;
+	background:#f0f0f0;
+	border-left:3px solid #0048a3;
+	color:#00bff3;
+	font-family:Tahoma;
+	font-size:1.75em;
+	margin-bottom:1px;
+	text-decoration:none;
+}
+
+.menu1 a:hover, .menu1 a:active {
+	background:#00bff3;
+	color:#fff;
+}
+
+.menu3 a {
+	display:block;
+	padding:4px;
+	border:1px solid #00bff3;
+	background:#fff;
+	color:#0048a0;
+	font-family:tahoma;
+	font-size:1.25em;
+	text-decoration:none;
+	margin-bottom:2px;
+}
+
+.menu3 a:hover, .menu3 a:active {
+	background:#00bff3;
+	color:#fff;
+}
+
+#acct_id {
+	float:right;
+	color:#ccc;
+}
+
+.notice {
+	background:#FFE699 url(img/png32/Info.png) top right no-repeat;
+	border:1px solid #EBB000;
+	padding:4px;
+	margin-bottom:16px;
+}
+
+#confirmation_shell {
+	display:none;
+	background:transparent url('o50c000.png') repeat;
+	width:100%;
+	height:100%;
+	position:absolute;
+	top:0px;
+	left:0px;
+}
+
+#confirmation {
+	position:absolute;
+	top:75px;
+	left:225px;
+	width:400px;
+	background:#fff;
+	border:3px solid #00bff3;
+	padding:8px;
+}
+
+#confirmCancel {
+	float:right;
+}
+
+#confirmDebit_color {
+	color:#76D030;
+}
+
+.remainingLow {
+	color:orange;
+}
+
+.remainingDebt {
+	color:#ff0000;
+}
+
+.mkg {
+	font-weight:bold;
+	color:#00aa33;
+}
+
+#trans_notes {
+	width:100%;
+	height:100px;
+}
+
+.txtarea {
+	font-family:Tahoma;
+	font-size:1.25em;
+	width:100%;
+	height:100px;
+}
+
+.tip {
+	background:transparent url('o50c000.png') repeat;
+	border:1px solid #333;
+	color:#fff;
+	padding:4px;
+}
+
+.noteTip {
+	color:#00bff3;
+	border-bottom:1px dashed #00bff3;
+	text-style:italic;
+}
+
+tr.even td {
+	background:#f0f0f0;
+	border-bottom:1px solid #c0c0c0;
+}
+
+tr.odd td, tr th {
+	border-bottom:1px solid #c0c0c0;
+}
+
+.deposit {
+	color:#00D114;
+}
+
+td {
+	padding:4px 25px 4px 25px;
+}
+
+.moredata {
+	width:100%;
+}
+.moredata td {
+	padding:4px 8px 4px 8px;
+}
+
+.table-right {
+	float:right;
+}
+
+table.table-right td {
+	text-align:right;
+}
+
+.balance_row td {
+	border-top:1px solid #00bff3;
+}
+
+.text-huge {
+	font-size:4em;
+}
+
+.text-large {
+	font-size:1.5em;
+}
+	
+
+.prefoot {
+	background:#e0e0e0;
+	height:200px;
+}
+
+.inner {
+	margin:4px;
+}
+
+input {
+	font-size:2em;	
+}
+
+input.full {
+	width:100%;
+}
+
+input.invalid {
+	border:1px solid #cc0000;
+	background:transparent url(img/png24/Warning.png) center right no-repeat;
+}
+
+.subtouch input {
+	font-size:1em;
+}
+
+.errorTip {
+}
+
+.errorTipShell .tip {
+	background:transparent url('img/o50c7f0000.png') repeat;
+	border:1px solid #c00;
+	color:#fff;
+	padding:4px;
+}
+
+.text-right {
+	text-align:right;
+}
+
+.text-center {
+	text-align:center;
+}
+
+
+#name
+{
+	width:				390px;
+}
+ 
+img.autocompleter-loading
+{
+	vertical-align:		top;
+}
+
+#footer {
+	margin-top:16px;
+}
+
+#footer div {
+	background:#e0e0e0;
+	padding:8px;
+	margin-bottom:16px;
+}
+
+#modSession {
+	display:none;
+}
+
+#sessionNotice {
+	float:right;border-bottom:none;margin-top:2px;
+	color:#FFE699;
+	font-size:24px;
+}
+#sessionNotice img {
+	vertical-align:middle;
+	border-bottom:none;
+}
