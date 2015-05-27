@@ -1,6 +1,5 @@
 <?php
 error_reporting (E_ALL ^ E_NOTICE);
-// UPS API Key: 8C5624EEFC392820
 
 $dbname = "copytrack";
 $dbhost = "localhost";
@@ -49,10 +48,6 @@ if (isset($_GET['setMode']))
 }
 
 $subaction = (isset($_GET['sub'])) ? $_GET['sub'] : false;
-
-
-
-
 
 // Constant: CC = CSS Style, following term is 'what'
 define('CC_FIELD_INVALID'," invalid errorTip");
@@ -130,75 +125,6 @@ $dbconn = ($GLOBALS["___mysqli_ston"] = mysqli_connect($dbhost,  $dbuser,  $dbpa
 //mysql_set_charset('utf8',$dbconn); // Necessary for char data to be pulled from db with correct charset.
 ((bool)mysqli_query($GLOBALS["___mysqli_ston"], "USE $dbname"));
 
-//Dead Code designed to send a back up email. It is incomplete.
-if ($_GET['debugMail'] == 'send') 
-{
-	$to      = 'theupsstore3912@gmail.com';
-	$subject = 'CopyTrack Accounts Backup';
-	$message = 'Testing';
-	$headers = 'From: store3912@theupsstore.com' . "\r\n" .
-		'Reply-To: store3912@theupsstore.com' . "\r\n" .
-		'X-Mailer: PHP/' . phpversion();
-		
-	$query = "SELECT account_name, acct_id, copies_bw, copies_color FROM accounts ORDER BY account_name";
-	$result = mysqli_query($dbconn, $query);
-	$acctlist = "Acct ID:\tAccount Name:\tBW\tColor\n\n";
-			while ($row = mysqli_fetch_array($result))
-			{
-				$acctlist .= $row['acct_id']."\t".$row['account_name']."\t".$row['copies_bw']."\t".$row['copies_color']."\n";
-			}
-			
-			$query = "SELECT sum(copies_bw), sum(copies_color), count(acct_id) FROM accounts";
-			$result = mysqli_query($GLOBALS["___mysqli_ston"], $query);
-			$overall = mysqli_fetch_array($result);
-			
-			$mailhtml = '
-			<h2>CopyTrack Accounts Backup:</h2>
-					Total Accounts: '.$overall['count(acct_id)'].'<br />
-					Total BW Copies Avail: '.$overall['sum(copies_bw)'].'<br />
-					Total Color Avail: '.$overall['sum(copies_color)'].'<br /><br />
-				
-			<hr />
-			
-			'.$acctlist.'
-			
-			
-			Copy & paste the above into excel to format view.
-			
-			<hr />';
-
-			$message = $mailhtml;
-	if (mail($to, $subject, $message, $headers, "-fstore3912@theupsstore.com"))
-	{
-		echo '<span style="position:absolute;top:25px;left:0px;z-index:9999;padding:8px;border:1px solid #00ff00;border-left:none;background:#fff;">Notice: Accounts backup email sent.</span>';
-	}
-}
-
-
-$action = (isset($_GET['action'])) ? $_GET['action'] : 'default';
-$name = (isset($_POST['name'])) ? addslashes($_POST['name']) : '';
-$acct_id = (isset($_GET['acct_id'])) ? $_GET['acct_id'] : '';
-$trans_id = (isset($_GET['trans_id'])) ? (int) $_GET['trans_id'] : '';
-$cmd = (isset($_POST['cmd'])) ? $_POST['cmd'] : '';
-$obj = (isset($_GET['obj'])) ? $_GET['obj'] : '';
-$sort = (isset($_GET['sort'])) ? $_GET['sort'] : '';
-if (isset($_GET['notice']))
-{
-	switch ($_GET['notice'])
-	{
-		case "dne":
-			$notice = 'Could not find account - please try again.';
-			break;
-		case "userauth":
-			$notice = 'Invalid Clerk ID: please try again.';
-			break;
-		case "acctexists":
-			$notice = 'An account with that name already exists; please use a different name.';
-			break;
-	}
-	$notice = '<div class="notice">'.$notice.'</div>';
-}
-$html = '';
 ///////////////////////////////////////
 // ADD ACCOUNT
 //////////////////////////////////////
@@ -709,7 +635,7 @@ else if ($action == 'do_transaction')
 	$row = mysqli_fetch_array($result);
 	
 	// MIGRATION MODE
-	// Modify date to static for entering of previous accounts so as to not alter Oct. sales #'s.
+	// Modify date to static for entering of previous accounts.
 	if (isset($_POST['prevAcct']) || $_SESSION['migration'] == true) { $timed = mktime(0, 0, 0, 9, 22, 2009); }
 	
 	
@@ -1086,7 +1012,7 @@ else if ($action == 'change_settings')
 			<h3>Manager Users:</h3>
 				<form class="subtouch">
 				<dl class="w25">
-					<dt>Name:</dt><dd><input type="text" value="Helen" /></dd>
+					<dt>Name:</dt><dd><input type="text" value="" /></dd>
 					<dt>Initials:</dt><dd><input type="text" size="3" length="3" value="HW" /></dd>
 					<dt>Clerk ID:</dt><dd><input type="password" size="4" length="4" value="1006" /></dd>
 					<dt>Level</dt><dd><select name="level"><option value="3" selected>Manager</option><option value="2">Clerk</option><option value="1">New Hire</option></select></dd>
@@ -1097,7 +1023,7 @@ else if ($action == 'change_settings')
 				
 				<form class="subtouch">
 				<dl class="w25">
-					<dt>Name:</dt><dd><input type="text" value="Joy" /></dd>
+					<dt>Name:</dt><dd><input type="text" value="" /></dd>
 					<dt>Initials:</dt><dd><input type="text" size="3" length="3" value="JOY" /></dd>
 					<dt>Clerk ID:</dt><dd><input type="password" size="4" length="4" value="2222" /></dd>
 					<dt>Level</dt><dd><select name="level"><option value="3">Manager</option><option value="2" selected>Clerk</option><option value="1">New Hire</option></select></dd>
@@ -1108,7 +1034,7 @@ else if ($action == 'change_settings')
 				
 				<form class="subtouch">
 				<dl class="w25">
-					<dt>Name:</dt><dd><input type="text" value="Dana" /></dd>
+					<dt>Name:</dt><dd><input type="text" value="" /></dd>
 					<dt>Initials:</dt><dd><input type="text" size="3" length="3" value="DR" /></dd>
 					<dt>Clerk ID:</dt><dd><input type="password" size="4" length="4" value="1111" /></dd>
 					<dt>Level</dt><dd><select name="level"><option value="3">Manager</option><option value="2" selected>Clerk</option><option value="1">New Hire</option></select></dd>
@@ -1119,7 +1045,7 @@ else if ($action == 'change_settings')
 				
 				<form class="subtouch">
 				<dl class="w25">
-					<dt>Name:</dt><dd><input type="text" value="Andrew" /></dd>
+					<dt>Name:</dt><dd><input type="text" value="" /></dd>
 					<dt>Initials:</dt><dd><input type="text" size="3" length="3" value="AD" /></dd>
 					<dt>Clerk ID:</dt><dd><input type="password" size="4" length="4" value="0000" /></dd>
 					<dt>Level</dt><dd><select name="level"><option value="3">Manager</option><option value="2" selected>Clerk</option><option value="1">New Hire</option></select></dd>
