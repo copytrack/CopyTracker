@@ -1161,22 +1161,11 @@ $stats = '
 
 
 
-<script type="text/javascript" src="js/mootools-core-1.5.1m.js" />
-
+<script type="text/javascript" src="js/mootools-core-1.5.1m.js"></script>
 <script type="text/javascript" src="js/Observer.js"></script>
 <script type="text/javascript" src="js/Autocompleter.js"></script>
 <script type="text/javascript" src="js/Autocompleter.Request.js"></script>
 <script type="text/javascript" src="js/datepicker.js"></script>
-
-<!-- <script type="text/javascript" src="js/moo123c.js"></script>
-<script type="text/javascript" src="js/moo1231m.js"></script>
-<script type="text/javascript" src="js/moo1231m.js"></script>
-<script type="text/javascript" src="js/moo1231m.js"></script>
-	-->
-
-<!--<script type="text/javascript" src="js/mootools-core-1.5.1.js"></script>-->
-<!--<script type="text/javascript" src="js/mootools-core-1.5.1m.js"></script>-->
-
 
 <style type="text/css">
 
