@@ -124,7 +124,29 @@ function formError($formdata,$field)
 $dbconn = ($GLOBALS["___mysqli_ston"] = mysqli_connect($dbhost,  $dbuser,  $dbpasswd)) or die("Couldn't Connect");
 //mysql_set_charset('utf8',$dbconn); // Necessary for char data to be pulled from db with correct charset.
 ((bool)mysqli_query($GLOBALS["___mysqli_ston"], "USE $dbname"));
-
+$action = (isset($_GET['action'])) ? $_GET['action'] : 'default';
+$name = (isset($_POST['name'])) ? addslashes($_POST['name']) : '';
+$acct_id = (isset($_GET['acct_id'])) ? $_GET['acct_id'] : '';
+$trans_id = (isset($_GET['trans_id'])) ? (int) $_GET['trans_id'] : '';
+$cmd = (isset($_POST['cmd'])) ? $_POST['cmd'] : '';
+$obj = (isset($_GET['obj'])) ? $_GET['obj'] : '';
+$sort = (isset($_GET['sort'])) ? $_GET['sort'] : '';
+if (isset($_GET['notice']))
+{
+	switch ($_GET['notice'])
+	{
+		case "dne":
+			$notice = 'Could not find account - please try again.';
+			break;
+		case "userauth":
+			$notice = 'Invalid Clerk ID: please try again.';
+			break;
+		case "acctexists":
+			$notice = 'An account with that name already exists; please use a different name.';
+			break;
+	}
+	$notice = '<div class="notice">'.$notice.'</div>';
+}
 $html = '';
 ///////////////////////////////////////
 // ADD ACCOUNT
