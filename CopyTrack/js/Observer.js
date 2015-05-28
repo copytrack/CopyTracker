@@ -1,7 +1,6 @@
 /**
  * Observer - Observe formelements for changes
  *
- * - Additional code from clientside.cnet.com
  *
  * @version		1.1
  *
