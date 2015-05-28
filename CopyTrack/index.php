@@ -125,6 +125,7 @@ $dbconn = ($GLOBALS["___mysqli_ston"] = mysqli_connect($dbhost,  $dbuser,  $dbpa
 //mysql_set_charset('utf8',$dbconn); // Necessary for char data to be pulled from db with correct charset.
 ((bool)mysqli_query($GLOBALS["___mysqli_ston"], "USE $dbname"));
 
+$html = '';
 ///////////////////////////////////////
 // ADD ACCOUNT
 //////////////////////////////////////
