@@ -276,7 +276,7 @@ var D={};Array.forEach(s,function(e){var l=e.toLowerCase();D[l]=e;y[l]=function(
 },value:function(e,l){e.value=(l!=null)?l:"";}});v["class"]=function(e){return("className" in e)?e.className||null:e.getAttribute("class");};var I=document.createElement("button");
 try{I.type="button";}catch(K){}if(I.type!="button"){y.type=function(e,l){e.setAttribute("type",l);};}I=null;var m=(function(){var O=document.createElement("style"),l=false;
 try{O.innerHTML="#justTesing{margin: 0px;}";l=!!O.innerHTML;}catch(N){}return l;})();var b=document.createElement("input"),k,j;b.value="t";b.type="submit";
-k=b.value!="t";try{b.type="email";j=b.type=="email";}catch(K){}b=null;if(k||!j){y.type=function(N,l){try{var O=N.value;N.type=l;N.value=O;}catch(P){}};
+k=b.value!="t";try{b.value="";b.type="email";j=b.type=="email";}catch(K){}b=null;if(k||!j){y.type=function(N,l){try{var O=N.value;N.type=l;N.value=O;}catch(P){}};
 }var d=(function(e){e.random="attribute";return(e.getAttribute("random")=="attribute");})(document.createElement("div"));var E=(function(e){e.innerHTML='<object><param name="should_fix" value="the unknown" /></object>';
 return e.cloneNode(true).firstChild.childNodes.length!=1;})(document.createElement("div"));var B=!!document.createElement("div").classList;var g=function(e){var l=(e||"").clean().split(" "),N={};
 return l.filter(function(O){if(O!==""&&!N[O]){return N[O]=O;}});};var F=function(e){this.classList.add(e);};var t=function(e){this.classList.remove(e);
