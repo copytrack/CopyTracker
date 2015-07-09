@@ -1,10 +1,7 @@
 <?php
 error_reporting (E_ALL ^ E_NOTICE);
 
-$dbname = "copytrack";
-$dbhost = "localhost";
-$dbuser = "";
-$dbpasswd = "";
+include(__DIR__ . "\\..\\copytrack-src\\credentials.php");
 
 header('X-UA-Compatible: IE=IE8');
 
