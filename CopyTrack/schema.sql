@@ -4,7 +4,7 @@ CREATE TABLE accounts (
 	creation_date int(11) UNSIGNED DEFAULT '0' NOT NULL,
 	req_trans_note tinyint(1) UNSIGNED DEFAULT '0' NOT NULL,
 	account_name varchar(255) DEFAULT '' NOT NULL,
-	account_phone bigint(10) DEFAULT '',
+	account_phone bigint(10) UNSIGNED DEFAULT '',
 	account_notes mediumtext,
 	copies_bw mediumint(8) DEFAULT '0' NOT NULL,
 	copies_color mediumint(8) DEFAULT '0' NOT NULL,
