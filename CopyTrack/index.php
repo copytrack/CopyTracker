@@ -853,13 +853,13 @@ else if ($action == 'view_reports')
 					$query .= " ORDER BY account_name";
 					
 					$result = mysqli_query($dbconn, $query);
-					$acctlist = '<table class="moredata">
+					$acctlist = '<table>
 							<tr><th>Acct ID:</th><th>Account Name</th><th>BW</th><th>Color</th><th>Status</th>';
 					while ($row = mysqli_fetch_array($result))
 					{
 						static $i = 0;
 						$evenodd = ($i % 2) ? 'even' : 'odd';
-						$acctlist .= '<tr class="'.$evenodd.'"><td>'.$row['acct_id'].'</td><td><a href="?action=view_account&acct_id='.$row['acct_id'].'">'.$row['account_name'].'</a></td><td class="text-right">'.$row['copies_bw'].'</td><td class="text-right">'.$row['copies_color'].'</td><td class="text-right">'.$row['status'].'</td></tr>';
+						$acctlist .= '<tr class="'.$evenodd.'"><td>'.$row['acct_id'].'</td><td><a href="?action=view_account&acct_id='.$row['acct_id'].'">'.$row['account_name'].'</a></td><td class="text-right">'.$row['copies_bw'].'</td><td class="text-right">'.$row['copies_color'].'</td><td>'.$row['status'].'</td></tr>';
 						$i++;
 					}
 					$acctlist .= '</table>';
@@ -1987,7 +1987,7 @@ body {
 window.addEvent('domready', function(){
 	<?php echo $js; ?>
 	
-	var noteTips = new Tips('.noteTip');
+	//var noteTips = new Tips('.noteTip');
 	
 	$('modSessionCtrl').addEvent('click', function(event){
 		$('modSession').setStyle('display','block');
