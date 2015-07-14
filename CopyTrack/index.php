@@ -113,6 +113,58 @@ function genAcctHtmlBlock($id)
 	return $html;
 }
 
+function genOperHtmlBlock($id)
+{
+	GLOBAL $dbconn;
+	$query = "SELECT * FROM operators WHERE oper_id = '".$id."' LIMIT 1";
+	$result = mysqli_query($dbconn, $query);
+	$acctrow = mysqli_fetch_array($result);
+	
+	// Get current clerks info and check privileges
+	if(isset($_SESSION['clerk_id']))
+	{
+		$query = "SELECT * FROM operators WHERE clerk_id = '".$_SESSION['clerk_id']."' LIMIT 1";
+		$result = mysqli_query( $dbconn, $query);
+		if (!$result) {
+			die("Error: %s\n" . mysqli_error($dbconn));
+		}
+		$row = mysqli_fetch_array($result);
+		
+		// Blank out clerk ID if current clerk has insufficient level (less than 3)
+		if($row['level'] < 3) $acctrow['clerk_id'] = '-';
+	}
+	
+	$html = '
+			<h2><span id="acct_id">'.$acctrow['oper_id'].'</span>Clerk</h2>
+				<dl class="w25">
+					<dt>Name: </dt><dd>'.$acctrow['clerk_name'].'</dd>
+					<dt>Initials: </dt><dd>'.$acctrow['clerk_initials'].'</dd>
+					<dt>ID:</dt><dd>'.$acctrow['clerk_id'].'</dd>
+					<dt>Level:</dt><dd>'.convertLevel($acctrow['level']).'</dd>
+					<dt>Status:</dt><dd>'.$acctrow['status'].'</dd>
+				</dl>';
+	return $html;
+}
+
+// Converts an operators level to a human readable value
+function convertLevel($level)
+{
+	switch($level)
+	{
+		case 1:
+			return 'New Hire';
+			
+		case 2:
+			return 'Clerk';
+			
+		case 3:
+			return 'Manager';
+			
+		default:
+			return 'Invalid';
+	}
+}
+
 function formError($formdata,$field)
 {
 	
@@ -141,6 +193,12 @@ if (isset($_GET['notice']))
 		case "acctexists":
 			$notice = 'An account with that name already exists; please use a different name.';
 			break;
+		case "insufprivileges":
+			$notice = 'Insufficient privileges; only managers can perform this action.';
+			break;
+		case "idexists":
+			$notice = 'An account with that ID already exists; please use a different ID.';
+			break;
 	}
 	$notice = '<div class="notice">'.$notice.'</div>';
 }
@@ -150,6 +208,9 @@ $html = '';
 //////////////////////////////////////
 if ($action == 'add_account')
 {
+	// NOTE: unset clerk_id in all actions except for change_settings for security purposes.
+	if(isset($_SESSION['clerk_id'])) unset($_SESSION['clerk_id']);
+	
 	$formV = array();
 	if ($cmd == 'new_acct')
 	{
@@ -229,6 +290,9 @@ if ($action == 'add_account')
 //////////////////////////////////////
 if ($action == 'edit_account')
 {
+	// NOTE: unset clerk_id in all actions except for change_settings for security purposes.
+	if(isset($_SESSION['clerk_id'])) unset($_SESSION['clerk_id']);
+	
 	$formV = array();
 	if ($cmd == 'edit_acct')
 	{
@@ -304,6 +368,9 @@ if ($action == 'edit_account')
 
 else if ($action == 'view_transactions')
 {
+	// NOTE: unset clerk_id in all actions except for change_settings for security purposes.
+	if(isset($_SESSION['clerk_id'])) unset($_SESSION['clerk_id']);
+	
 	///////////////////////////////////////
 	// VIEW SINGLE TRANSACTION RESULT
 	//////////////////////////////////////
@@ -412,6 +479,9 @@ else if ($action == 'view_transactions')
 
 else if ($action == 'view_reports')
 {
+	// NOTE: unset clerk_id in all actions except for change_settings for security purposes.
+	if(isset($_SESSION['clerk_id'])) unset($_SESSION['clerk_id']);
+	
 	if ($obj)
 	{
 		if ($obj == 'all_accounts')
@@ -636,6 +706,9 @@ else if ($action == 'view_reports')
 
 else if ($action == 'do_transaction')
 {
+	// NOTE: unset clerk_id in all actions except for change_settings for security purposes.
+	if(isset($_SESSION['clerk_id'])) unset($_SESSION['clerk_id']);
+	
 	$postdata['acct_id'] = cleanData($_POST['acct_id']);
 	$postdata['bw'] = cleanData($_POST['bw']);
 	$postdata['startbal_bw'] = cleanData($_POST['startbal_bw']);
@@ -723,6 +796,9 @@ else if ($action == 'do_transaction')
 
 else if ($action == 'find_account' || $action == 'view_account')
 {
+	// NOTE: unset clerk_id in all actions except for change_settings for security purposes.
+	if(isset($_SESSION['clerk_id'])) unset($_SESSION['clerk_id']);
+	
 	if ($name || $acct_id)
 	{
 		if ($name)
@@ -1022,83 +1098,440 @@ else if ($action == 'find_account' || $action == 'view_account')
 
 else if ($action == 'change_settings')
 {
-	if ($_POST['clerk_id'])
+	$valid_id = false;
+	if(!isset($_SESSION['clerk_id']) && $_POST['clerk_id'])
 	{
-		//if (isValidClerkId($_POST['clerk_id']))
-		if ($subaction == 'manage_user')
+		$valid_id = authClerk($_POST['clerk_id']);
+		if(!$valid_id)
 		{
+			header("Location: ?action=change_settings&notice=userauth");
+			die("Invalid clerk ID");
+		}
+	}
+	
+	if ($valid_id || isset($_SESSION['clerk_id']))
+	{
+		if(!isset($_SESSION['clerk_id'])) $_SESSION['clerk_id'] = $_POST['clerk_id'];
+		
+		$subaction = (isset($_GET['subaction'])) ? $_GET['subaction'] : 'default';
+		$oper_id = (isset($_GET['oper_id'])) ? $_GET['oper_id'] : '';
+		
+		if($subaction == 'find_clerk' || $subaction == 'view_clerk')
+		{
+			if ($name || $oper_id)
+			{
+				if ($name)
+				{
+					$query = "SELECT * FROM operators WHERE clerk_name = '".$name."' LIMIT 1";
+					$result = mysqli_query( $dbconn, $query);
+					if (!$result) {
+						die("Error: %s\n" . mysqli_error($dbconn));
+					}
+					$row = mysqli_fetch_array($result);
+				}
+				else if ($oper_id)
+				{
+					$query = "SELECT * FROM operators WHERE oper_id = '".$oper_id."' LIMIT 1";
+					$result = mysqli_query( $dbconn, $query);
+					$row = mysqli_fetch_array($result);
+				}
+				
+				if (!isset($row['oper_id']))
+				{
+					header("Location: ?action=change_settings&subaction=find_clerk&notice=dne");
+				}
+				
+				$html = genOperHtmlBlock($row['oper_id']);
+				
+				$actionline = '<li><a href="?action=change_settings&subaction=edit_clerk&oper_id='.$row['oper_id'].'">Edit Clerk Info</a></li>';
+			}
+			
+			else
+			{
+				if ($_SESSION['quickComplete']) { $delay = 250; } else { $delay = 1000; }
+				$js = "
+				$('name').focus();
+				var inputWord = $('name');
+		 
+				new Autocompleter.Request.JSON(inputWord, 'autofindclerk.php', {
+					'indicatorClass': 'autocompleter-loading',
+					'selectMode': 'type-ahead',
+					'delay': ".$delay."
+					
+				});
+
+
+			";
+			
+				$redirect = (isset($_GET['redirect'])) ? '&redirect='.$_GET['redirect'] : '';
+				$html = '
+				<h2>Change Settings</h2>
+				<h3>Find Clerk</h3>
+				'.$notice.'
+				<form action="?action=change_settings&subaction=find_clerk'.$redirect.'" method="POST">
+				<dl class="w25">
+					<dt>Name: </dt><dd class="text-right"><input class="full" type="text" id="name" name="name"/></dd>
+					<dt>&nbsp;</dt><dd class="text-right"><input type="submit" value="Find" /></dd>
+				</dl>
+				</form>
+
+				<br /><br /><br /><br /><br /><br />';
+			}
+		}
+		
+		else if($subaction == 'add_clerk')
+		{
+			$formV = array();
+			if ($cmd == 'new_acct')
+			{
+				$formV['v_name'] = filter($_POST['clerk_name']);
+				$formV['v_initials'] = $_POST['clerk_initials'];
+				$formV['v_id'] = $_POST['clerk_id'];
+				$formV['v_level'] = $_POST['level'];
+				$formV['v_status'] = $_POST['status'];
+				
+				// Clerk name must be filled in
+				if (empty($formV['v_name']))
+				{
+					$formV['notValid'] = true;
+					$formV['f_name'] = CC_FIELD_INVALID;
+					$formV['t_name'] = ' title="You must enter a clerk name."';
+				}
+				
+				// Clerk ID must be 4 digits
+				if (strlen($formV['v_id']) != 4 || !is_numeric($formV['v_id']))
+				{
+					$formV['notValid'] = true;
+					$formV['f_id'] = CC_FIELD_INVALID;
+					$formV['t_id'] = ' title="You must enter a clerk ID."';
+				}
+				
+				if (!$formV['notValid'])
+				{
+					// Get current clerk info to check privileges
+					$query = "SELECT * FROM operators WHERE clerk_id = '".$_SESSION['clerk_id']."' LIMIT 1";
+					$result = mysqli_query( $dbconn, $query);
+					if (!$result) {
+						die("Error: %s\n" . mysqli_error($dbconn));
+					}
+					$r = mysqli_fetch_array($result);
+					
+					// Verify current clerk has sufficient privileges
+					if($r['level'] < 3)
+					{
+						header("Location: ?action=change_settings&subaction=add_clerk&notice=insufprivileges");
+						die("Insufficient privileges");
+					}
+				
+					// Check if the clerk's name already exists
+					$sql = "SELECT clerk_name, oper_id FROM operators WHERE clerk_name = '".$formV['v_name']."' LIMIT 1";
+					$res = mysqli_query($dbconn, $sql);
+					$num = mysqli_num_rows($res);
+					if ($num == 1)
+					{
+						header("Location: ?action=change_settings&subaction=add_clerk&notice=acctexists");
+						die("Acct already exists");
+					}
+					
+					// Check if the clerk ID is already in use
+					$sql = "SELECT clerk_name, oper_id FROM operators WHERE clerk_id = '".$formV['v_id']."' LIMIT 1";
+					$res = mysqli_query($dbconn, $sql);
+					$num = mysqli_num_rows($res);
+					if ($num == 1)
+					{
+						header("Location: ?action=change_settings&subaction=add_clerk&notice=idexists");
+						die("ID already exists");
+					}
+					
+					$query = "INSERT INTO operators (clerk_id, level, status, clerk_name, clerk_initials)
+								VALUES ('".$formV['v_id']."',
+										'".$formV['v_level']."',
+										'".$formV['v_status']."',
+										'".$formV['v_name']."',
+										'".$formV['v_initials']."')";
+					$res = mysqli_query($dbconn, $query);
+					if (!$res) {
+						die("Error: %s\n" . mysqli_error($dbconn));
+					}
+				
+					$query = " SELECT oper_id FROM operators WHERE clerk_id = '".$formV['v_id']."' LIMIT 1";
+					$result = mysqli_query($dbconn, $query);
+					$row = mysqli_fetch_array($result);
+					
+					header("Location: ?action=change_settings&subaction=view_clerk&oper_id=".$row['oper_id']);
+				}
+			}
+			
+			if ($cmd != 'new_acct' || $formV['notValid'] == true)
+			{
+				$js = '
+				var errorTips = new Tips(\'.errorTip\',{className:\'errorTipShell\'});
+				
+				$(\'account_name\').focus();
+
+				';
+				$html = '
+				<h2>Change Settings</h2>
+				<h3>Add Clerk</h3>
+					'.$notice.'
+					<form action="?action=change_settings&subaction=add_clerk" method="POST">
+					<dl class="w25">
+						<dt>Name: </dt><dd class="text-right"><input class="full'.$formV['f_name'].'" '.$formV['t_name'].' type="text" id="clerk_name" name="clerk_name" value="'.$formV['v_name'].'" /></dd>
+						<dt>Initials: </dt><dd class="text-right"><input class="full'.$formV['f_initials'].'" '.$formV['t_initials'].' type="text" name="clerk_initials" value="'.$formV['v_initials'].'" /></dd>
+						<dt>ID: </dt><dd class="text-right"><input class="'.$formV['f_id'].'" '.$formV['t_id'].' length="4" size="4" maxlength="4" type="password" name="clerk_id"/></dd>
+						<dt>Level: </dt><dd class="text-right">
+							<select name="level" style="font-size: 2em">
+								<option value="1">New Hire</option>
+								<option value="2" selected>Clerk</option>
+								<option value="3">Manager</option>
+							</select></dd>
+						<dt>Status: </dt><dd class="text-right">
+							<select name="status" style="font-size: 2em">
+								<option value="Active">Active</option>
+								<option value="Inactive">Inactive</option>
+							</select></dd>
+						<dt>&nbsp;</dt><dd class="text-right"><input type="submit" value="Create" /></dd>
+					</dl>
+					<input type="hidden" name="cmd" value="new_acct" />
+					</form>
+				';
+			}
+		}
+		
+		else if($subaction == 'edit_clerk')
+		{
+			$formV = array();
+			if ($cmd == 'edit_acct')
+			{
+				$formV['oper_id'] = $oper_id;
+				$formV['v_name'] = filter($_POST['clerk_name']);
+				$formV['v_initials'] = $_POST['clerk_initials'];
+				$formV['v_id'] = $_POST['clerk_id'];
+				$formV['v_level'] = $_POST['level'];
+				$formV['v_status'] = $_POST['status'];
+				
+				// Clerk name must be filled in
+				if (empty($formV['v_name']))
+				{
+					$formV['notValid'] = true;
+					$formV['f_name'] = CC_FIELD_INVALID;
+					$formV['t_name'] = ' title="You must enter a clerk name."';
+				}
+				
+				// Clerk ID must be 4 digits
+				if (strlen($formV['v_id']) != 4 || !is_numeric($formV['v_id']))
+				{
+					$formV['notValid'] = true;
+					$formV['f_id'] = CC_FIELD_INVALID;
+					$formV['t_id'] = ' title="You must enter a clerk ID."';
+				}
+				
+				if (!$formV['notValid'])
+				{	
+					// Get current clerk info to check privileges
+					$query = "SELECT * FROM operators WHERE clerk_id = '".$_SESSION['clerk_id']."' LIMIT 1";
+					$result = mysqli_query( $dbconn, $query);
+					if (!$result) {
+						die("Error: %s\n" . mysqli_error($dbconn));
+					}
+					$r = mysqli_fetch_array($result);
+					
+					// Verify current clerk has sufficient privileges
+					if($r['level'] < 3)
+					{
+						header("Location: ?action=change_settings&subaction=edit_clerk&oper_id=".$oper_id."&notice=insufprivileges");
+						die("Insufficient privileges");
+					}
+				
+					// Check if the clerk's name already exists
+					$sql = "SELECT clerk_name, oper_id FROM operators WHERE clerk_name = '".$formV['v_name']."' LIMIT 1";
+					$res = mysqli_query($dbconn, $sql);
+					$num = mysqli_num_rows($res);
+					$row = mysqli_fetch_array($res);
+					if ($num == 1 && $formV['oper_id'] != $row['oper_id'])
+					{
+						header("Location: ?action=change_settings&subaction=edit_clerk&oper_id=".$oper_id."&notice=acctexists");
+						die("Acct already exists");
+					}
+					
+					// Check if the clerk ID is already in use
+					$sql = "SELECT clerk_name, oper_id FROM operators WHERE clerk_id = '".$formV['v_id']."' LIMIT 1";
+					$res = mysqli_query($dbconn, $sql);
+					$num = mysqli_num_rows($res);
+					$row = mysqli_fetch_array($res);
+					if ($num == 1 && $formV['oper_id'] != $row['oper_id'])
+					{
+						header("Location: ?action=change_settings&subaction=edit_clerk&oper_id=".$oper_id."&notice=idexists");
+						die("ID already exists");
+					}
+					
+					$sql = "UPDATE operators
+					SET clerk_id = '" . $formV['v_id'] . "',
+						level = '" . $formV['v_level'] . "',
+						status = '" . $formV['v_status'] . "',
+						clerk_name = '" . $formV['v_name'] . "',
+						clerk_initials = '" . $formV['v_initials'] . "'
+					WHERE oper_id = '" . $formV['oper_id']."' LIMIT 1";
+
+					mysqli_query($dbconn, $sql) or die('Failure');
+					
+					$query = " SELECT oper_id FROM operators WHERE oper_id = '".$formV['oper_id']."' LIMIT 1";
+					$result = mysqli_query($dbconn, $query);
+					$row = mysqli_fetch_array($result);
+					
+					header("Location: ?action=change_settings&subaction=view_clerk&oper_id=".$row['oper_id']);
+				}
+			}
+			
+			if ($cmd != 'edit_acct' || $formV['notValid'] == true)
+			{
+				if ($formV['notValid'] != true)
+				{
+					$query = "SELECT * FROM operators WHERE oper_id = '".$oper_id."' LIMIT 1";
+					$result = mysqli_query($dbconn, $query);
+					$acctrow = mysqli_fetch_array($result);
+					
+					$formV['v_name'] = $acctrow['clerk_name'];
+					$formV['v_initials'] = $acctrow['clerk_initials'];
+					$formV['v_id'] = $acctrow['clerk_id'];
+					$formV['v_level'] = $acctrow['level'];
+					$formV['v_status'] = $acctrow['status'];
+				}
+				
+				$js = '
+				var errorTips = new Tips(\'.errorTip\',{className:\'errorTipShell\'});
+				';
+				$html = '
+				<h2>Change Settings</h2>
+				<h3>Edit Account</h3>
+					'.$notice.'
+					<form action="?action=change_settings&subaction=edit_clerk&oper_id='.$oper_id.'" method="POST">
+					<dl class="w25">
+						<dt>Name: </dt><dd class="text-right"><input class="full'.$formV['f_name'].'" '.$formV['t_name'].' type="text" id="clerk_name" name="clerk_name" value="'.$formV['v_name'].'" /></dd>
+						<dt>Initials: </dt><dd class="text-right"><input class="full'.$formV['f_initials'].'" '.$formV['t_initials'].' type="text" name="clerk_initials" value="'.$formV['v_initials'].'" /></dd>
+						<dt>ID: </dt><dd class="text-right"><input class="'.$formV['f_id'].'" '.$formV['t_id'].' length="4" size="4" maxlength="4" type="password" name="clerk_id" value="'.$formV['v_id'].'"/></dd>
+						<dt>Level: </dt><dd class="text-right">
+							<select name="level" style="font-size: 2em">
+								<option value="1"'.(($formV['v_level'] == 1) ? ' selected' : '').'>New Hire</option>
+								<option value="2"'.(($formV['v_level'] == 2) ? ' selected' : '').'>Clerk</option>
+								<option value="3"'.(($formV['v_level'] == 3) ? ' selected' : '').'>Manager</option>
+							</select></dd>
+						<dt>Status: </dt><dd class="text-right">
+							<select name="status" style="font-size: 2em">
+								<option value="Active"' . (($formV['v_status'] == 'Active') ? ' selected' : '') . '>Active</option>
+								<option value="Inactive"' . (($formV['v_status'] == 'Inactive') ? ' selected' : '') . '>Inactive</option>
+							</select></dd>
+						<dt>&nbsp;</dt><dd class="text-right"><input type="submit" value="Create" /></dd>
+					</dl>
+					<input type="hidden" name="cmd" value="edit_acct" />
+					</form>
+				';
+			}
+		}
+		
+		else if($subaction == 'view_clerks')
+		{
+			$sortr = (isset($_GET['reverse'])) ? " DESC" : " ASC";
+			switch ($sort)
+			{
+				case "oper_id":
+					$sortsql = 'oper_id';
+					$sortoperid = (!isset($_GET['reverse'])) ? '&reverse=1' : '';
+					break;
+				case "clerk_id":
+					$sortsql = 'clerk_id';
+					$sortclerkid = (!isset($_GET['reverse'])) ? '&reverse=1' : '';
+					break;
+				case "level":
+					$sortsql = 'level';
+					$sortlevel = (!isset($_GET['reverse'])) ? '&reverse=1' : '';
+					break;
+				case "status":
+					$sortsql = 'status';
+					$sortstatus = (!isset($_GET['reverse'])) ? '&reverse=1' : '';
+					break;
+				case "clerk_initials":
+					$sortsql = 'clerk_initials';
+					$sortinitials = (!isset($_GET['reverse'])) ? '&reverse=1' : '';
+					break;
+				case "clerk_name":
+				default:
+					$sortsql = 'clerk_name';
+					$sortname = (!isset($_GET['reverse'])) ? '&reverse=1' : '';
+					break;
+			}
+			$sorturl = "?action=change_settings&subaction=view_clerks";
+			
+			// Get current clerk info to check privileges
+			$query = "SELECT * FROM operators WHERE clerk_id = '".$_SESSION['clerk_id']."' LIMIT 1";
+			$result = mysqli_query( $dbconn, $query);
+			if (!$result) {
+				die("Error: %s\n" . mysqli_error($dbconn));
+			}
+			$r = mysqli_fetch_array($result);
+			
+			$query = "SELECT oper_id, clerk_id, clerk_name, clerk_initials, level, status FROM operators ORDER BY " . $sortsql . $sortr;
+			$result = mysqli_query($dbconn, $query);
+			$acctlist = '<table>
+							<tr><th><a href="'.$sorturl.'&sort=oper_id'.$sortoperid.'">Oper ID</a></th><th><a href="'.$sorturl.'&sort=clerk_id'.$sortclerkid.'">Clerk ID</a></th><th><a href="'.$sorturl.'&sort=clerk_name'.$sortname.'">Clerk Name</a></th><th><a href="'.$sorturl.'&sort=clerk_initials'.$sortinitials.'">Clerk Initials</a></th><th><a href="'.$sorturl.'&sort=level'.$sortlevel.'">Level</a></th><th><a href="'.$sorturl.'&sort=status'.$sortstatus.'">Status</a></th>';
+			while ($row = mysqli_fetch_array($result))
+			{
+				// Blank out clerk ID if current clerk has insufficient level (less than 3)
+				if($r['level'] < 3) $row['clerk_id'] = '-';
+		
+				static $i = 0;
+				$evenodd = ($i % 2) ? 'even' : 'odd';
+				$acctlist .= '<tr class="'.$evenodd.'"><td>'.$row['oper_id'].'</td><td class="text-right">'.$row['clerk_id'].'</td><td><a href="?action=change_settings&subaction=view_clerk&oper_id='.$row['oper_id'].'">'.$row['clerk_name'].'</a></td><td class="text-right">'.$row['clerk_initials'].'</td><td class="text-right">'.convertLevel($row['level']).'</td><td class="text-right">'.$row['status'].'</td></tr>';
+				$i++;
+			}
+			$acctlist .= '</table>';
+			
 			$html = '
-		<h2>Change Settings</h2>
-			<h3>Manager Users:</h3>
-				<form class="subtouch">
-				<dl class="w25">
-					<dt>Name:</dt><dd><input type="text" value="" /></dd>
-					<dt>Initials:</dt><dd><input type="text" size="3" length="3" value="HW" /></dd>
-					<dt>Clerk ID:</dt><dd><input type="password" size="4" length="4" value="1006" /></dd>
-					<dt>Level</dt><dd><select name="level"><option value="3" selected>Manager</option><option value="2">Clerk</option><option value="1">New Hire</option></select></dd>
-				</dl>
-				</form>
-				
-				<hr />
-				
-				<form class="subtouch">
-				<dl class="w25">
-					<dt>Name:</dt><dd><input type="text" value="" /></dd>
-					<dt>Initials:</dt><dd><input type="text" size="3" length="3" value="JOY" /></dd>
-					<dt>Clerk ID:</dt><dd><input type="password" size="4" length="4" value="2222" /></dd>
-					<dt>Level</dt><dd><select name="level"><option value="3">Manager</option><option value="2" selected>Clerk</option><option value="1">New Hire</option></select></dd>
-				</dl>
-				</form>
-				
-				<hr />
-				
-				<form class="subtouch">
-				<dl class="w25">
-					<dt>Name:</dt><dd><input type="text" value="" /></dd>
-					<dt>Initials:</dt><dd><input type="text" size="3" length="3" value="DR" /></dd>
-					<dt>Clerk ID:</dt><dd><input type="password" size="4" length="4" value="1111" /></dd>
-					<dt>Level</dt><dd><select name="level"><option value="3">Manager</option><option value="2" selected>Clerk</option><option value="1">New Hire</option></select></dd>
-				</dl>
-				</form>
-				
-				<hr />
-				
-				<form class="subtouch">
-				<dl class="w25">
-					<dt>Name:</dt><dd><input type="text" value="" /></dd>
-					<dt>Initials:</dt><dd><input type="text" size="3" length="3" value="AD" /></dd>
-					<dt>Clerk ID:</dt><dd><input type="password" size="4" length="4" value="0000" /></dd>
-					<dt>Level</dt><dd><select name="level"><option value="3">Manager</option><option value="2" selected>Clerk</option><option value="1">New Hire</option></select></dd>
-				</dl>
-				</form>
-				
-				<hr />
+			<h2>Change Settings</h2>
+			<h3>All Clerks:</h3>
+				'.$acctlist.'
 			';
 		}
 		
 		else
 		{
 			$html = '
-		<h2>Change Settings</h2>
+			<h2>Change Settings</h2>
 			<p>
-				Modify settings for CopyTracker here, and manage users by selecting the option to the right.
+				Modify settings for CopyTracker here, and manage users by selecting the options to the right.
 			</p>
 			
 			<h3>Configure Copy Tracker:</h3>
-				<form>
-				<dl class="w33">
-					<dt>Allow Negative Balances?:</dt><dd><input type="checkbox" /></dd>
-				</dl>
-				</form>
-			
+			<form>
+			<dl class="w33">
+				<dt>Allow Negative Balances?:</dt><dd><input type="checkbox" /></dd>
+			</dl>
+			</form>
 			';
 		}
+		
+		if(!isset($actionline)) $actionline = '';
+		
+		$html_act = '
+		<!--<h3>More Settings:</h3>
+			<ul class="menu3">
+				<li><a href="?action=change_settings&sub=manage_users">Manage Users</a></li>
+			</ul>-->
+			<h3>Manage Clerk Accounts:</h3>
+			<ul class="menu3">
+				<li><a href="?action=change_settings&subaction=find_clerk">Find Clerk</a></li>
+				'.$actionline.'
+				<li><a href="?action=change_settings&subaction=add_clerk">Add New Clerk</a></li>
+				<li><a href="?action=change_settings&subaction=view_clerks">View All Clerks</a></li>
+			</ul>
+		';
 	}
 	
 	else
 	{
 		$html = '
-		<h2>Change Settings</h2>
+			<h2>Change Settings</h2>
+			'.$notice.'
 			<div class="grid_4 prefix_2 suffix_2 text-center">
 				<br /><br /><br />
 				<form action="?action=change_settings" method="post">
@@ -1108,13 +1541,6 @@ else if ($action == 'change_settings')
 				<br /><br /><br /><br />
 			</div>';
 	}
-	
-	$html_act = '
-		<!--<h3>More Settings:</h3>
-			<ul class="menu3">
-				<li><a href="?action=change_settings&sub=manage_users">Manage Users</a></li>
-			</ul>-->
-	';
 }
 
 else if ($action == 'default')
@@ -1181,7 +1607,8 @@ $stats = '
 
 
 
-<script type="text/javascript" src="js/mootools-yui-compressed-1.5.1.js"/>
+<!--script type="text/javascript" src="js/mootools-yui-compressed-1.5.1.js"/-->
+<script type="text/javascript" src="js/mootools-core-1.5.1.js"/>
 <script type="text/javascript" src="js/Observer.js"></script>
 <script type="text/javascript" src="js/Autocompleter.js"></script>
 <script type="text/javascript" src="js/Autocompleter.Request.js"></script>
