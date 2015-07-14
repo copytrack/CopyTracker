@@ -175,8 +175,10 @@ $dbconn = ($GLOBALS["___mysqli_ston"] = mysqli_connect($dbhost,  $dbuser,  $dbpa
 //mysql_set_charset('utf8',$dbconn); // Necessary for char data to be pulled from db with correct charset.
 ((bool)mysqli_query($GLOBALS["___mysqli_ston"], "USE $dbname"));
 $action = (isset($_GET['action'])) ? $_GET['action'] : 'default';
+$subaction = (isset($_GET['subaction'])) ? $_GET['subaction'] : 'default';
 $name = (isset($_POST['name'])) ? addslashes($_POST['name']) : '';
 $acct_id = (isset($_GET['acct_id'])) ? $_GET['acct_id'] : '';
+$oper_id = (isset($_GET['oper_id'])) ? $_GET['oper_id'] : '';
 $trans_id = (isset($_GET['trans_id'])) ? (int) $_GET['trans_id'] : '';
 $cmd = (isset($_POST['cmd'])) ? $_POST['cmd'] : '';
 $obj = (isset($_GET['obj'])) ? $_GET['obj'] : '';
@@ -481,6 +483,43 @@ else if ($action == 'view_transactions')
 			</ul>
 	';
 	}
+	///////////////////////////////////////
+	// VIEW CLERK TRANSACTIONS
+	//////////////////////////////////////
+	else if ($oper_id)
+	{
+		// Get clerk info
+		$query = "SELECT clerk_initials, clerk_id FROM operators WHERE oper_id = '".$oper_id."' LIMIT 1";
+		$result = mysqli_query($dbconn, $query);
+		$acctrow = mysqli_fetch_array($result);
+		
+		// Get transactions made by clerk
+		$query = "SELECT * FROM transactions WHERE oper_id = '".$acctrow['clerk_id']."' ORDER BY trans_timestamp DESC";
+		$result = mysqli_query($dbconn, $query);
+		$rowlist = '<table><tr><th>TransID:</th><th>Date:</th><th>BW</th><th>Color</th><th>Notes:</th></tr>';
+		while ($row = mysqli_fetch_array($result))
+		{
+			static $c = 0;
+			if ($c % 2) { $rowlist .= '<tr class="even">'; }
+			else { $rowlist .= '<tr class="odd">'; }
+			$m = ($row['trans_type'] == 'deposit') ? '<span class="mkg">+</span>' : '<span glass="mkr"></span>';
+			if ($row['trans_notes']) { $rownotes = '<span title="'.$row['trans_notes'].'" class="noteTip">Mouse over to view</span>'; } else { $rownotes = ''; }
+			// ORIGINAL WITH MINUTES 
+			//This was removed because the exact times are off and I don't know why.
+			//$rowlist .= '<td class="text-right">'.$row['trans_id'].'</td><td>'.date('m-d-y g:ia',$row['trans_timestamp']).'</td><td class="text-right">'.$m.$row['copies_bw'].'</td><td class="text-right">'.$m.$row['copies_color'].'</td><td>'.$rownotes.'</td></tr>';
+			$rowlist .= '<td class="text-right">'.$row['trans_id'].'</td><td>'.date('m-d-y',$row['trans_timestamp']).'</td><td class="text-right">'.$m.$row['copies_bw'].'</td><td class="text-right">'.$m.$row['copies_color'].'</td><td>'.$rownotes.'</td></tr>';
+			$c++;
+		}
+		$rowlist .= '</table>';
+		
+		$html = '
+		<div class="grid_8 alpha">
+			
+			<h2>All Transactions by '.$acctrow['clerk_initials'].':</h2>
+			'.$rowlist.'
+			
+		</div>';
+	}
 	else
 	{
 		$html = 'Transaction ID not specified.';
@@ -668,6 +707,7 @@ else if ($action == 'view_reports')
 					$html = '<span class="notice">Invalid date entered.</span>';
 				}
 			}
+			
 			else
 			{
 				$js = "
@@ -687,6 +727,34 @@ else if ($action == 'view_reports')
 							</form>
 				';
 			}
+		}
+		
+		else if($obj == 'trans_by_type')
+		{
+			$type = (isset($_GET['type'])) ? $_GET['type'] : 'color';
+			
+			// Only get transactions where the number of copies of that type is greater than 0
+			$query = "SELECT * FROM transactions WHERE copies_".$type." > 0 ORDER BY trans_timestamp DESC";
+			$result = mysqli_query($dbconn, $query);
+			$translist = '<table class="moredata">
+							<tr><th>Trans ID:</th><th>Date:</th><th>Account Name:</th><th>'.(($type == 'color') ? 'Color' : 'BW').'</th><th>Notes:</th></tr>';
+			while ($row = mysqli_fetch_array($result))
+			{
+				static $i = 0;
+				$evenodd = ($i % 2) ? 'even' : 'odd';
+				$typeclass = '';
+				if ($row['trans_type'] == 'deposit') { $typeclass = ' deposit'; }
+				$notes = (!empty($row['trans_notes'])) ? '<span class="noteTip" title="'.$row['trans_notes'].'">View Notes</span>' : '&nbsp;';
+				// ORIGINAL WITH MINUTES $translist .= '<tr class="'.$evenodd.'"><td>'.$row['trans_id'].'</td><td>'.date('m-d-y g:ia',$row['trans_timestamp']).'<td><a href="?action=view_account&acct_id='.$row['acct_id'].'">'.getAcctNameById($row['acct_id']).'</a></td><td class="text-right'.$typeclass.'">'.$row['copies_bw'].'</td><td class="text-right'.$typeclass.'">'.$row['copies_color'].'</td><td>'.$notes.'</tr>';
+				$translist .= '<tr class="'.$evenodd.'"><td>'.$row['trans_id'].'</td><td>'.date('m-d-y',$row['trans_timestamp']).'<td><a href="?action=view_account&acct_id='.$row['acct_id'].'">'.getAcctNameById($row['acct_id']).'</a></td><td class="text-right'.$typeclass.'">'.$row['copies_'.$type].'</td><td>'.$notes.'</tr>';
+				$i++;
+			}
+			$translist .= '</table>';
+			
+			$html = '
+				<h2>All Transactions by Type:</h2>
+				'.$translist.'
+			';
 		}
 	}
 	
@@ -709,6 +777,24 @@ else if ($action == 'view_reports')
 				<li><a href="?action=view_reports&obj=all_trans">(Slow) View All Transactions</a></li>
 				<!--<li><a href="#">View All Transactions by Day</a></li>-->
 				<li><a href="?action=view_reports&obj=trans_by_date">View Transactions by Date</a></li>
+			</ul>
+		</div>
+		
+		<div class="clear"></div>
+		<br /><br />
+		
+		<div class="grid_4 alpha">
+			<h3>By Clerk:</h3>
+			<ul class="menu3">
+				<li><a href="?action=find_account&redirect=view_transactions&search_clerk=true">View All Transactions by Clerk</a></li>
+			</ul>
+		</div>
+		
+		<div class="grid_4 omega">
+			<h3>By Type:</h3>
+			<ul class="menu3">
+				<li><a href="?action=view_reports&obj=trans_by_type&type=color">View All Color Transactions</a></li>
+				<li><a href="?action=view_reports&obj=trans_by_type&type=bw">View All BW Transactions</a></li>
 			</ul>
 		</div>
 		
@@ -815,10 +901,17 @@ else if ($action == 'find_account' || $action == 'view_account')
 	
 	if ($name || $acct_id)
 	{
+		// search_clerk is a hackjob for allowing to search for a clerk, but it works (only for redirecting to view_transactions)
+		$search_clerk = (isset($_GET['search_clerk']) && $_GET['search_clerk'] == 'true') ? true : false;
+		
 		if ($name)
 		{
+			if($search_clerk)
+			{
+				$query = "SELECT * FROM operators WHERE clerk_name = '".$name."' LIMIT 1";
+			}
 			// Check if searched by phone number
-			if (strlen($name) == 10 && is_numeric($name))
+			else if (strlen($name) == 10 && is_numeric($name))
 			{
 				$query = "SELECT * FROM accounts WHERE account_phone = '".$name."' LIMIT 1";
 			}
@@ -837,12 +930,12 @@ else if ($action == 'find_account' || $action == 'view_account')
 			$row = mysqli_fetch_array($result);
 		}
 		
-		if (!isset($row['acct_id']))
+		if (!$search_clerk && !isset($row['acct_id']) || $search_clerk && !isset($row['oper_id']))
 		{
 			header("Location: ?action=find_account&notice=dne");
 		}
 		
-		if ($_GET['redirect'] == 'view_transactions') { header("Location: ?action=view_transactions&acct_id=".$row['acct_id']); }
+		if ($_GET['redirect'] == 'view_transactions') { header("Location: ?action=view_transactions&".(($search_clerk) ? "oper_id" : "acct_id")."=".(($search_clerk) ? $row['oper_id'] : $row['acct_id'])); }
 		
 		$nbw = (is_numeric($_GET['nbw'])) ? $_GET['nbw'] : '';
 		$ncolor = (is_numeric($_GET['ncolor'])) ? $_GET['ncolor'] : '';
@@ -1094,7 +1187,7 @@ else if ($action == 'find_account' || $action == 'view_account')
 		$('name').focus();
 		var inputWord = $('name');
  
-		new Autocompleter.Request.JSON(inputWord, 'autofind.php', {
+		new Autocompleter.Request.JSON(inputWord, ".((isset($_GET['search_clerk']) && $_GET['search_clerk'] == 'true') ? "'autofindclerk.php'" : "'autofind.php'").", {
 			'indicatorClass': 'autocompleter-loading',
 			'selectMode': 'type-ahead',
 			'delay': ".$delay."
@@ -1105,10 +1198,13 @@ else if ($action == 'find_account' || $action == 'view_account')
 	";
 	
 		$redirect = (isset($_GET['redirect'])) ? '&redirect='.$_GET['redirect'] : '';
+		
+		// search_clerk is a hackjob for allowing to search for a clerk, but it works (only for redirecting to view_transactions)
+		$search_clerk = (isset($_GET['search_clerk'])) ? '&search_clerk='.$_GET['search_clerk'] : '';
 		$html = '
 	<h2>Find Account</h2>
 		'.$notice.'
-		<form action="?action=find_account'.$redirect.'" method="POST">
+		<form action="?action=find_account'.$redirect.$search_clerk.'" method="POST">
 		<dl class="w25">
 			<dt>Name: </dt><dd class="text-right"><input class="full" type="text" id="name" name="name" /></dd>
 			<dt>&nbsp;</dt><dd class="text-right"><input type="submit" value="Find" /></dd>
@@ -1135,9 +1231,6 @@ else if ($action == 'change_settings')
 	if ($valid_id || isset($_SESSION['clerk_id']))
 	{
 		if(!isset($_SESSION['clerk_id'])) $_SESSION['clerk_id'] = $_POST['clerk_id'];
-		
-		$subaction = (isset($_GET['subaction'])) ? $_GET['subaction'] : 'default';
-		$oper_id = (isset($_GET['oper_id'])) ? $_GET['oper_id'] : '';
 		
 		if($subaction == 'find_clerk' || $subaction == 'view_clerk')
 		{
