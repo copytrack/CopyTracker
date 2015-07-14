@@ -2,6 +2,7 @@
 error_reporting (E_ALL ^ E_NOTICE);
 
 include(__DIR__ . "\\..\\copytrack-src\\credentials.php");
+include(__DIR__ . "\\..\\copytrack-src\\timezone.php");
 
 header('X-UA-Compatible: IE=IE8');
 
@@ -43,6 +44,9 @@ if (isset($_GET['setMode']))
 		break;
 	}
 }
+
+// Initialize if negative balance are allowed
+if (!isset($_SESSION['allow_neg_balances'])) $_SESSION['allow_neg_balances'] = false;
 
 $subaction = (isset($_GET['sub'])) ? $_GET['sub'] : false;
 
@@ -201,6 +205,9 @@ if (isset($_GET['notice']))
 			break;
 		case "idexists":
 			$notice = 'An account with that ID already exists; please use a different ID.';
+			break;
+		case "negbalnotallowed":
+			$notice = 'Negative balances are not allowed.';
 			break;
 	}
 	$notice = '<div class="notice">'.$notice.'</div>';
@@ -1024,10 +1031,18 @@ else if ($action == 'do_transaction')
 		header("Location: ?action=view_account&acct_id=".$postdata['acct_id'].$authUriAppend."&notice=userauth&nbw=".$postdata['bw']."&ncolor=".$postdata['color']);
 		die("Authentication verification denial safeguard event.");
 	}
+	
+	// If negative balance, check if it's allowed.
+	if (($bw_new < 0 || $color_new < 0) && !$_SESSION['allow_neg_balances'])
+	{
+		header("Location: ?action=view_account&acct_id=".$postdata['acct_id'].$authUriAppend."&notice=negbalnotallowed&nbw=".$postdata['bw']."&ncolor=".$postdata['color']);
+		die("Negative balances not allowed.");
+	}
 
 	$sql = "UPDATE accounts
 			SET copies_bw = '" . $bw_new . "',
-				copies_color = '" . $color_new . "'
+				copies_color = '" . $color_new . "',
+				status = 'Active'
 			WHERE acct_id = '" . $postdata['acct_id']."' LIMIT 1";
 
 	if (mysqli_query($dbconn, $sql))
