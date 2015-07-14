@@ -268,7 +268,7 @@ if ($action == 'add_account')
 	if ($cmd != 'new_acct' || $formV['notValid'] == true)
 	{
 		$js = '
-		var errorTips = new Tips(\'.errorTip\',{className:\'errorTipShell\'});
+		//var errorTips = new Tips(\'.errorTip\',{className:\'errorTipShell\'});
 		
 		$(\'account_name\').focus();
 
@@ -349,7 +349,7 @@ if ($action == 'edit_account')
 		}
 	
 		$js = '
-		var errorTips = new Tips(\'.errorTip\',{className:\'errorTipShell\'});
+		//var errorTips = new Tips(\'.errorTip\',{className:\'errorTipShell\'});
 		
 		//var checkPhone = new InputMask($(\'account_phone\'), { mask: \'(999) 999-9999\'3});
 		';
@@ -1549,7 +1549,7 @@ else if ($action == 'change_settings')
 			if ($cmd != 'new_acct' || $formV['notValid'] == true)
 			{
 				$js = '
-				var errorTips = new Tips(\'.errorTip\',{className:\'errorTipShell\'});
+				//var errorTips = new Tips(\'.errorTip\',{className:\'errorTipShell\'});
 				
 				$(\'account_name\').focus();
 
@@ -1683,7 +1683,7 @@ else if ($action == 'change_settings')
 				}
 				
 				$js = '
-				var errorTips = new Tips(\'.errorTip\',{className:\'errorTipShell\'});
+				//var errorTips = new Tips(\'.errorTip\',{className:\'errorTipShell\'});
 				';
 				$html = '
 				<h2>Change Settings</h2>
