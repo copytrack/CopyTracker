@@ -1181,7 +1181,7 @@ $stats = '
 
 
 
-<script type="text/javascript" src="js/mootools-core-1.5.1m.js"></script>
+<script type="text/javascript" src="js/mootools-yui-compressed-1.5.1.js"/>
 <script type="text/javascript" src="js/Observer.js"></script>
 <script type="text/javascript" src="js/Autocompleter.js"></script>
 <script type="text/javascript" src="js/Autocompleter.Request.js"></script>
