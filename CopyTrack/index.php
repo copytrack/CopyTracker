@@ -633,6 +633,13 @@ else if ($action == 'view_reports')
 		{
 			if ($cmd == 'dateset')
 			{
+				// A bug appeared after adding view inactive customers by date.
+				// If not explicitly set by the user, $_POST['date_prime'] had no value. This fixes the problem.
+				if(!$_POST['date_prime'])
+				{
+					$_POST['date_prime'] = date("m/d/Y");
+				}
+			
 				$dp = explode('/',$_POST['date_prime']); // Date format should be m/d/Y
 				$de = explode('/',$_POST['date_end']);
 				$date_prime = mktime(0,0,0,$dp[0],$dp[1],$dp[2]);
@@ -729,6 +736,95 @@ else if ($action == 'view_reports')
 			}
 		}
 		
+		else if($obj == 'inactivity')
+		{
+			if ($cmd == 'dateset')
+			{
+				// If not explicitly set by the user, $_POST['date'] has no value. This fixes the problem. Defaults to the current day.
+				if(!$_POST['date'])
+				{
+					$_POST['date'] = date("m/d/Y");
+				}
+			
+				$dp = explode('/',$_POST['date']); // Date format should be m/d/Y
+				$date = mktime(0,0,0,$dp[0],$dp[1],$dp[2]);
+				
+				if ($date)
+				{
+					// Get all accounts that are currently active.
+					$query = "SELECT * FROM transactions WHERE trans_timestamp > '".$date."' ORDER BY trans_timestamp ASC";
+					$result = mysqli_query($dbconn, $query);
+					$active_accounts = array();
+					while ($row = mysqli_fetch_array($result))
+					{
+						static $i = 0;
+						$evenodd = ($i % 2) ? 'even' : 'odd';
+						
+						if(!in_array($row['acct_id'], $active_accounts))
+						{
+							array_push($active_accounts, $row['acct_id']);
+						}
+						$i++;
+					}
+					
+					// Build query for getting all inactive customers
+					$query = "SELECT * from accounts";
+					for($i = 0; $i < count($active_accounts); $i++)
+					{
+						if($i == 0)
+						{
+							$query .= " WHERE acct_id <> " . $active_accounts[$i];
+						}
+						else
+						{
+							$query .= " AND acct_id <> " . $active_accounts[$i];
+						}
+					}
+					$query .= " ORDER BY account_name";
+					
+					$result = mysqli_query($dbconn, $query);
+					$acctlist = '<table class="moredata">
+							<tr><th>Acct ID:</th><th>Account Name</th><th>BW</th><th>Color</th><th>Status</th>';
+					while ($row = mysqli_fetch_array($result))
+					{
+						static $i = 0;
+						$evenodd = ($i % 2) ? 'even' : 'odd';
+						$acctlist .= '<tr class="'.$evenodd.'"><td>'.$row['acct_id'].'</td><td><a href="?action=view_account&acct_id='.$row['acct_id'].'">'.$row['account_name'].'</a></td><td class="text-right">'.$row['copies_bw'].'</td><td class="text-right">'.$row['copies_color'].'</td><td class="text-right">'.$row['status'].'</td></tr>';
+						$i++;
+					}
+					$acctlist .= '</table>';
+					
+					$html = '
+						<h2>Inactive Accounts:</h2>
+							'.$acctlist.'
+						';
+				}
+				else
+				{
+					$html = '<span class="notice">Invalid date entered.</span>';
+				}
+			}
+			
+			else
+			{
+				$js = "
+					var date = new DatePicker($('date'), { pickerClass:'datepicker_vista', format:'m-d-Y', inputOutputFormat: 'm/d/Y' });
+				";
+				
+				$html = '
+					<h2>View Inactive Customers:</h2>
+						<h3>Select Date:</h3>
+							<form action="?action=view_reports&obj=inactivity" method="post">
+							<dl class="w25">
+								<dt>Date:<br /><span class="noteTip" title="Enter a date to view all customers inactive since that date.">Help ?</span></dt><dd class="text-right"><input style="width:186px;" type="text" name="date" id="date" /></dd>
+								<dt>&nbsp;</dt><dd class="text-right"><input type="submit" value="View" /></dd>
+							</dl>
+							<input type="hidden" name="cmd" value="dateset" />
+							</form>
+				';
+			}
+		}
+		
 		else if($obj == 'trans_by_type')
 		{
 			$type = (isset($_GET['type'])) ? $_GET['type'] : 'color';
@@ -777,6 +873,7 @@ else if ($action == 'view_reports')
 				<li><a href="?action=view_reports&obj=all_trans">(Slow) View All Transactions</a></li>
 				<!--<li><a href="#">View All Transactions by Day</a></li>-->
 				<li><a href="?action=view_reports&obj=trans_by_date">View Transactions by Date</a></li>
+				<li><a href="?action=view_reports&obj=inactivity">View Customers Inactive Since Date</a></li>
 			</ul>
 		</div>
 		
