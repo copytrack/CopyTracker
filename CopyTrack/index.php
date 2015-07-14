@@ -604,6 +604,76 @@ else if ($action == 'view_reports')
 					
 		}
 		
+		else if ($obj == 'view_negative_balances')
+		{
+			$sortr = (isset($_GET['reverse'])) ? " DESC" : " ASC";
+			switch ($sort)
+			{
+				case "acct_id":
+					$sortsql = 'acct_id';
+					$sortid = (!isset($_GET['reverse'])) ? '&reverse=1' : '';
+					break;
+				case "copies_bw":
+					$sortsql = 'copies_bw';
+					$sortbw = (!isset($_GET['reverse'])) ? '&reverse=1' : '';
+					break;
+				case "copies_color":
+					$sortsql = 'copies_color';
+					$sortcolor = (!isset($_GET['reverse'])) ? '&reverse=1' : '';
+					break;
+				case "status":
+					$sortsql = 'status';
+					$sortcolor = (!isset($_GET['reverse'])) ? '&reverse=1' : '';
+					break;
+				case "account_name":
+				default:
+					$sortsql = 'account_name';
+					$sortname = (!isset($_GET['reverse'])) ? '&reverse=1' : '';
+					break;
+			}
+			$sorturl = "?action=view_reports&obj=view_negative_balances";
+			
+			$query = "SELECT account_name, acct_id, copies_bw, copies_color, status FROM accounts WHERE copies_bw < 0 OR copies_color < 0 ORDER BY " . $sortsql . $sortr;
+			$result = mysqli_query($dbconn, $query);
+			$acctlist = '<table>
+							<tr><th><a href="'.$sorturl.'&sort=acct_id'.$sortid.'">Acct ID:</a></th><th><a href="'.$sorturl.'&sort=account_name'.$sortname.'">Account Name:</a></th><th><a href="'.$sorturl.'&sort=copies_bw'.$sortbw.'">BW</a></th><th><a href="'.$sorturl.'&sort=copies_color'.$sortcolor.'">Color</a></th><th><a href="'.$sorturl.'&sort=status'.$sortstatus.'">Status</a></th>';
+			while ($row = mysqli_fetch_array($result))
+			{
+				static $i = 0;
+				$evenodd = ($i % 2) ? 'even' : 'odd';
+				$acctlist .= '<tr class="'.$evenodd.'"><td>'.$row['acct_id'].'</td><td><a href="?action=view_account&acct_id='.$row['acct_id'].'">'.$row['account_name'].'</a></td><td class="text-right">'.$row['copies_bw'].'</td><td class="text-right">'.$row['copies_color'].'</td><td class="text-right">'.$row['status'].'</td></tr>';
+				$i++;
+			}
+			$acctlist .= '</table>';
+			
+			$query = "SELECT sum(copies_bw), sum(copies_color), count(acct_id) FROM accounts";
+			$result = mysqli_query($GLOBALS["___mysqli_ston"], $query);
+			$overall = mysqli_fetch_array($result);
+			$query = "SELECT count(trans_id), sum(copies_bw), sum(copies_color) FROM transactions";
+			$result = mysqli_query($GLOBALS["___mysqli_ston"], $query);
+			$overall2 = mysqli_fetch_array($result);
+			
+			$html = '
+			<h2>Overall:</h2>
+				<div class="grid_4 alpha">
+					Total Accounts: '.$overall['count(acct_id)'].'<br />
+					Total BW Copies Avail: '.$overall['sum(copies_bw)'].'<br />
+					Total Color Avail: '.$overall['sum(copies_color)'].'<br /><br />
+				</div>
+				
+				<div class="grid_4 omega">
+					Total Transactions: '.$overall2['count(trans_id)'].'<br />
+					Total BW Copies Processed: '.$overall2['sum(copies_bw)'].'<br />
+					Total Color Processed: '.$overall2['sum(copies_color)'].'<br /><br />
+				</div>
+				
+				<hr />
+				
+			<h2>All Accounts:</h2>
+				'.$acctlist.'
+			';
+		}
+		
 		else if ($obj == 'all_trans')
 		{
 			$query = "SELECT * FROM transactions ORDER BY trans_timestamp DESC";
@@ -863,6 +933,7 @@ else if ($action == 'view_reports')
 			<ul class="menu3">
 				<li><a href="?action=view_reports&obj=all_accounts">View All Accounts</a></li>
 				<li><a href="?action=find_account&redirect=view_transactions">View All Transactions by Account</a></li>
+				<li><a href="?action=view_reports&obj=view_negative_balances">View All Negative Balances</a></li>
 				<!--<li><a href="#">View Transactions by Date</a></li>-->
 			</ul>
 		</div>
