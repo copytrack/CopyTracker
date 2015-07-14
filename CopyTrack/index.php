@@ -803,7 +803,16 @@ else if ($action == 'find_account' || $action == 'view_account')
 	{
 		if ($name)
 		{
-			$query = "SELECT * FROM accounts WHERE account_name = '".$name."' LIMIT 1";
+			// Check if searched by phone number
+			if (strlen($name) == 10 && is_numeric($name))
+			{
+				$query = "SELECT * FROM accounts WHERE account_phone = '".$name."' LIMIT 1";
+			}
+			else
+			{
+				$query = "SELECT * FROM accounts WHERE account_name = '".$name."' LIMIT 1";
+			}
+			
 			$result = mysqli_query( $dbconn, $query);
 			$row = mysqli_fetch_array($result);
 		}
