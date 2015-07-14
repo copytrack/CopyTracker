@@ -1,15 +1,12 @@
 <?php
+
+include(__DIR__ . "\\..\\copytrack-src\\credentials.php");
  
 // Processing a 6 MB dictionary file!
 ini_set('memory_limit', '128M');
 
-$dbname = "copytrack";
-$dbhost = "localhost";
-$dbuser = "";
-$dbpasswd = "";
-
 $dbconn = ($GLOBALS["___mysqli_ston"] = mysqli_connect($dbhost,  $dbuser,  $dbpasswd)) or die("Couldn't Connect");
-mysql_set_charset('utf8',$dbconn); // Necessary for char data to be pulled from db with correct charset.
+mysqli_set_charset($dbconn,'utf8'); // Necessary for char data to be pulled from db with correct charset.
 ((bool)mysqli_query($GLOBALS["___mysqli_ston"], "USE $dbname"));
  
 $found = array();
