@@ -634,7 +634,7 @@ else if ($action == 'view_reports')
 			if ($cmd == 'dateset')
 			{
 				// A bug appeared after adding view inactive customers by date.
-				// If not explicitly set by the user, $_POST['date_prime'] had no value. This fixes the problem.
+				// If not explicitly set by the user, $_POST['date_prime'] had no value. This fixes the problem. Defaults to the current day.
 				if(!$_POST['date_prime'])
 				{
 					$_POST['date_prime'] = date("m/d/Y");
