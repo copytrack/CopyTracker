@@ -489,7 +489,7 @@ else if ($action == 'view_transactions')
 	else if ($oper_id)
 	{
 		// Get clerk info
-		$query = "SELECT clerk_initials, clerk_id FROM operators WHERE oper_id = '".$oper_id."' LIMIT 1";
+		$query = "SELECT clerk_name, clerk_id FROM operators WHERE oper_id = '".$oper_id."' LIMIT 1";
 		$result = mysqli_query($dbconn, $query);
 		$acctrow = mysqli_fetch_array($result);
 		
@@ -515,7 +515,7 @@ else if ($action == 'view_transactions')
 		$html = '
 		<div class="grid_8 alpha">
 			
-			<h2>All Transactions by '.$acctrow['clerk_initials'].':</h2>
+			<h2>All Transactions by '.$acctrow['clerk_name'].':</h2>
 			'.$rowlist.'
 			
 		</div>';
