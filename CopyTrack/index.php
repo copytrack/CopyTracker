@@ -109,6 +109,7 @@ function genAcctHtmlBlock($id)
 					<dt>Phone: </dt><dd>'.$acctrow['account_phone'].'</dd>
 					<dt>Copies:</dt><dd><span style="border-left:5px solid #000;padding-left:5px;width:32%;display:inline-block;" id="fb_bw">'.$acctrow['copies_bw'].' BW</span><span style="border-left:5px solid #00ff00;padding-left:5px;width:32%;display:inline-block;" id="fb_color">'.$acctrow['copies_color'].' Color</span></dd>
 					<dt>Notes:</dt><dd>'.$acctrow['account_notes'].'</dd>
+					<dt>Status:</dt><dd>'.$acctrow['status'].'</dd>
 				</dl>';
 	return $html;
 }
@@ -246,10 +247,11 @@ if ($action == 'add_account')
 				die("Acct already exists");
 			}
 			
-			$query = "INSERT INTO accounts (account_name, account_phone, account_notes, creation_date)
+			$query = "INSERT INTO accounts (account_name, account_phone, account_notes, status, creation_date)
 						VALUES ('".$formV['v_name']."',
 								'".$formV['v_phone']."',
 								'".$formV['v_notes']."',
+								'Active',
 								'".$formV['v_time']."')";
 		mysqli_query($dbconn, $query) or die('Failure');
 		
@@ -300,6 +302,7 @@ if ($action == 'edit_account')
 		$formV['v_name'] = filter($_POST['account_name']);
 		$formV['v_phone'] = $_POST['account_phone'];
 		$formV['v_notes'] = filter($_POST['account_notes']);
+		$formV['v_status'] = $_POST['status'];
 		if (isset($_POST['account_phone']))
 		{
 			if ((strlen($_POST['account_phone']) != 10 || !is_numeric($_POST['account_phone'])) && $_POST['account_phone'] != '')
@@ -315,7 +318,8 @@ if ($action == 'edit_account')
 			$sql = "UPDATE accounts
 			SET account_name = '" . $formV['v_name'] . "',
 				account_phone = '" . $formV['v_phone'] . "',
-				account_notes = '" . $formV['v_notes'] . "'
+				account_notes = '" . $formV['v_notes'] . "',
+				status = '" . $formV['v_status'] . "'
 			WHERE acct_id = '" . $formV['acct_id']."' LIMIT 1";
 
 		mysqli_query($dbconn, $sql) or die('Failure');
@@ -339,6 +343,7 @@ if ($action == 'edit_account')
 			$formV['v_name'] = $acctrow['account_name'];
 			$formV['v_phone'] = (strlen($acctrow['account_phone']) == 10) ? $acctrow['account_phone'] : '';
 			$formV['v_notes'] = $acctrow['account_notes'];
+			$formV['v_status'] = $acctrow['status'];
 		}
 	
 		$js = '
@@ -354,6 +359,11 @@ if ($action == 'edit_account')
 				<dt>Name: </dt><dd class="text-right"><input class="full" type="text" name="account_name" value="'.$formV['v_name'].'" /></dd>
 				<dt>Phone #: </dt><dd class="text-right"><input class="full '.$formV['f_phone'].'" '.$formV['t_phone'].' type="text" name="account_phone" id="account_phone" value="'.$formV['v_phone'].'" /></dd>
 				<dt>Notes: </dt><dd class="text-right"><textarea class="txtarea" name="account_notes">'.$formV['v_notes'].'</textarea></dd>
+				<dt>Status: </dt><dd class="text-right">
+					<select name="status" style="font-size: 2em">
+						<option value="Active"'.(($formV['v_status'] == 'Active') ? ' selected' : '').'>Active</option>
+						<option value="Inactive"'.(($formV['v_status'] == 'Inactive') ? ' selected' : '').'>Inactive</option>
+					</select></dd>
 				<dt>&nbsp;</dt><dd class="text-right"><input type="submit" value="Edit" /></dd>
 			</dl>
 			<input type="hidden" name="cmd" value="edit_acct" />
@@ -501,6 +511,10 @@ else if ($action == 'view_reports')
 					$sortsql = 'copies_color';
 					$sortcolor = (!isset($_GET['reverse'])) ? '&reverse=1' : '';
 					break;
+				case "status":
+					$sortsql = 'status';
+					$sortcolor = (!isset($_GET['reverse'])) ? '&reverse=1' : '';
+					break;
 				case "account_name":
 				default:
 					$sortsql = 'account_name';
@@ -509,15 +523,15 @@ else if ($action == 'view_reports')
 			}
 			$sorturl = "?action=view_reports&obj=all_accounts";
 			
-			$query = "SELECT account_name, acct_id, copies_bw, copies_color FROM accounts ORDER BY " . $sortsql . $sortr;
+			$query = "SELECT account_name, acct_id, copies_bw, copies_color, status FROM accounts ORDER BY " . $sortsql . $sortr;
 			$result = mysqli_query($dbconn, $query);
 			$acctlist = '<table>
-							<tr><th><a href="'.$sorturl.'&sort=acct_id'.$sortid.'">Acct ID:</a></th><th><a href="'.$sorturl.'&sort=account_name'.$sortname.'">Account Name:</a></th><th><a href="'.$sorturl.'&sort=copies_bw'.$sortbw.'">BW</a></th><th><a href="'.$sorturl.'&sort=copies_color'.$sortcolor.'">Color</a></th>';
+							<tr><th><a href="'.$sorturl.'&sort=acct_id'.$sortid.'">Acct ID:</a></th><th><a href="'.$sorturl.'&sort=account_name'.$sortname.'">Account Name:</a></th><th><a href="'.$sorturl.'&sort=copies_bw'.$sortbw.'">BW</a></th><th><a href="'.$sorturl.'&sort=copies_color'.$sortcolor.'">Color</a></th><th><a href="'.$sorturl.'&sort=status'.$sortstatus.'">Status</a></th>';
 			while ($row = mysqli_fetch_array($result))
 			{
 				static $i = 0;
 				$evenodd = ($i % 2) ? 'even' : 'odd';
-				$acctlist .= '<tr class="'.$evenodd.'"><td>'.$row['acct_id'].'</td><td><a href="?action=view_account&acct_id='.$row['acct_id'].'">'.$row['account_name'].'</a></td><td class="text-right">'.$row['copies_bw'].'</td><td class="text-right">'.$row['copies_color'].'</td></tr>';
+				$acctlist .= '<tr class="'.$evenodd.'"><td>'.$row['acct_id'].'</td><td><a href="?action=view_account&acct_id='.$row['acct_id'].'">'.$row['account_name'].'</a></td><td class="text-right">'.$row['copies_bw'].'</td><td class="text-right">'.$row['copies_color'].'</td><td class="text-right">'.$row['status'].'</td></tr>';
 				$i++;
 			}
 			$acctlist .= '</table>';

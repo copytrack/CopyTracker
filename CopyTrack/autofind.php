@@ -17,7 +17,7 @@ if (!$value) { $value = $_GET['valu']; }
  
 if (is_string($value) )
 {
-	$query = "SELECT account_name, account_phone FROM accounts";
+	$query = "SELECT account_name, account_phone FROM accounts WHERE status<>'Inactive' ORDER BY account_name";
 	$result = mysqli_query($dbconn, $query);
 	$words = '';
 	while ($row = mysqli_fetch_array($result))
