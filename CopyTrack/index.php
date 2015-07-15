@@ -209,6 +209,9 @@ if (isset($_GET['notice']))
 		case "negbalnotallowed":
 			$notice = 'Negative balances are not allowed.';
 			break;
+		case "savesuccessful":
+			$notice = 'Save successful.';
+			break;
 	}
 	$notice = '<div class="notice">'.$notice.'</div>';
 }
@@ -1032,9 +1035,10 @@ else if ($action == 'do_transaction')
 		die("Authentication verification denial safeguard event.");
 	}
 	
-	// If negative balance, check if it's allowed.
-	if (($bw_new < 0 || $color_new < 0) && !$_SESSION['allow_neg_balances'])
+	// If negative balance, check if it's allowed (only checked if trans_type is debit).
+	if (($postdata['bw'] > 0 && $bw_new < 0 || ($postdata['color'] > 0 && $color_new < 0)) && !$_SESSION['allow_neg_balances'] && $postdata['trans_type'] == 'debit')
 	{
+		//die("startbal_color: " . $postdata['startbal_color']);
 		header("Location: ?action=view_account&acct_id=".$postdata['acct_id'].$authUriAppend."&notice=negbalnotallowed&nbw=".$postdata['bw']."&ncolor=".$postdata['color']);
 		die("Negative balances not allowed.");
 	}
@@ -1415,6 +1419,15 @@ else if ($action == 'change_settings')
 	{
 		if(!isset($_SESSION['clerk_id'])) $_SESSION['clerk_id'] = $_POST['clerk_id'];
 		
+		
+		if($cmd == 'save')
+		{
+			$_SESSION['allow_neg_balances'] = isset($_POST['allow_neg_balances']) && $_POST['allow_neg_balances'] ? true : false;
+			
+			header("Location: ?action=change_settings&notice=savesuccessful");
+			die("Save successful");
+		}
+		
 		if($subaction == 'find_clerk' || $subaction == 'view_clerk')
 		{
 			if ($name || $oper_id)
@@ -1794,17 +1807,19 @@ else if ($action == 'change_settings')
 		
 		else
 		{
-			$html = '
+			$html = $notice.'
 			<h2>Change Settings</h2>
 			<p>
 				Modify settings for CopyTracker here, and manage users by selecting the options to the right.
 			</p>
 			
 			<h3>Configure Copy Tracker:</h3>
-			<form>
+			<form action="?action=change_settings" method="post">
 			<dl class="w33">
-				<dt>Allow Negative Balances?:</dt><dd><input type="checkbox" /></dd>
+				<dt>Allow Negative Balances?:</dt><dd><input type="checkbox" name="allow_neg_balances"'.($_SESSION['allow_neg_balances'] ? ' checked' : '').' value="1"/></dd>
+				<dt>&nbsp;</dt><dd class="text-right"><input type="submit" value="Save" /></dd>
 			</dl>
+			<input type="hidden" name="cmd" value="save" />
 			</form>
 			';
 		}
