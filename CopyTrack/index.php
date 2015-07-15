@@ -872,7 +872,7 @@ else if ($action == 'view_reports')
 					$acctlist .= '</table>';
 					
 					$html = '
-						<h2>Inactive Accounts:</h2>
+						<h2>Inactive Accounts Since '.date('M jS, Y',$date).':</h2>
 							'.$acctlist.'
 						';
 				}
