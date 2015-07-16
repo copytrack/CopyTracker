@@ -990,34 +990,6 @@ else if ($action == 'view_reports')
 				';
 			}
 		}
-		
-		else if($obj == 'trans_by_type')
-		{
-			$type = (isset($_GET['type'])) ? $_GET['type'] : 'color';
-			
-			// Only get transactions where the number of copies of that type is greater than 0
-			$query = "SELECT * FROM transactions WHERE copies_".$type." > 0 ORDER BY trans_timestamp DESC";
-			$result = mysqli_query($dbconn, $query);
-			$translist = '<table class="moredata">
-							<tr><th>Trans ID:</th><th>Date:</th><th>Account Name:</th><th>'.(($type == 'color') ? 'Color' : 'BW').'</th><th>Notes:</th></tr>';
-			while ($row = mysqli_fetch_array($result))
-			{
-				static $i = 0;
-				$evenodd = ($i % 2) ? 'even' : 'odd';
-				$typeclass = '';
-				if ($row['trans_type'] == 'deposit') { $typeclass = ' deposit'; }
-				$notes = (!empty($row['trans_notes'])) ? '<span class="noteTip" title="'.$row['trans_notes'].'">View Notes</span>' : '&nbsp;';
-				// ORIGINAL WITH MINUTES $translist .= '<tr class="'.$evenodd.'"><td>'.$row['trans_id'].'</td><td>'.date('m-d-y g:ia',$row['trans_timestamp']).'<td><a href="?action=view_account&acct_id='.$row['acct_id'].'">'.getAcctNameById($row['acct_id']).'</a></td><td class="text-right'.$typeclass.'">'.$row['copies_bw'].'</td><td class="text-right'.$typeclass.'">'.$row['copies_color'].'</td><td>'.$notes.'</tr>';
-				$translist .= '<tr class="'.$evenodd.'"><td>'.$row['trans_id'].'</td><td>'.date('m-d-y',$row['trans_timestamp']).'<td><a href="?action=view_account&acct_id='.$row['acct_id'].'">'.getAcctNameById($row['acct_id']).'</a></td><td class="text-right'.$typeclass.'">'.$row['copies_'.$type].'</td><td>'.$notes.'</tr>';
-				$i++;
-			}
-			$translist .= '</table>';
-			
-			$html = '
-				<h2>All Transactions by Type:</h2>
-				'.$translist.'
-			';
-		}
 	}
 	
 	else
@@ -1051,14 +1023,6 @@ else if ($action == 'view_reports')
 			<h3>By Clerk:</h3>
 			<ul class="menu3">
 				<li><a href="?action=find_account&redirect=view_transactions&search_clerk=true">View All Transactions by Clerk</a></li>
-			</ul>
-		</div>
-		
-		<div class="grid_4 omega">
-			<h3>By Type:</h3>
-			<ul class="menu3">
-				<li><a href="?action=view_reports&obj=trans_by_type&type=color">View All Color Transactions</a></li>
-				<li><a href="?action=view_reports&obj=trans_by_type&type=bw">View All BW Transactions</a></li>
 			</ul>
 		</div>
 		
