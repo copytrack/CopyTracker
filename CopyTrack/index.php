@@ -726,32 +726,87 @@ else if ($action == 'view_reports')
 				if (count($de) == 3) { $date_end = mktime(0,0,0,$de[0],$de[1],$de[2]); }
 				if ($date_prime)
 				{
+					// Get filter options
+					$clerk_name = isset($_POST['clerk_name']) ? $_POST['clerk_name'] : '';
+					$show_neg_bal_only = isset($_POST['neg_bal_only']);
+					$show_bw = isset($_POST['show_bw']);
+					$show_color = isset($_POST['show_color']);
+					
+					$clerk_filer = '';
+					$clerk_inititals = '';
+					if(!empty($clerk_name))
+					{
+						$query = "SELECT clerk_id, clerk_initials FROM operators WHERE clerk_name = '".$clerk_name."'";
+						$result = mysqli_query($dbconn, $query);
+						$row = mysqli_fetch_array($result);
+						$clerk_filer = ' AND oper_id = '.$row['clerk_id'];
+						$clerk_initials = $row['clerk_initials'];
+					}
+					
 					if ($date_end)
 					{
 						$enddate = ' to ' . date('M jS',$date_end); // for display to user.
 						$endtime = $date_end + ((60 * 60 * 24 ) - 1);
-						$query = "SELECT * FROM transactions WHERE trans_timestamp > '".$date_prime."' AND trans_timestamp < '".$endtime."' ORDER BY trans_timestamp ASC";
+						$query = "SELECT * FROM transactions WHERE trans_timestamp > '".$date_prime."' AND trans_timestamp < '".$endtime."'";
+						if(!$show_bw || !$show_color)
+						{
+							$query .= $show_bw ? " AND copies_bw > 0" : "";
+							$query .= $show_color ? " AND copies_color > 0" : "";
+						}
+						$query .= $clerk_filer;
+						$query .= " ORDER BY trans_timestamp ASC";
 					}
 					else
 					{
 						$enddate = '';
 						$endtime = $date_prime + ((60 * 60 * 24 ) - 1);
-						$query = "SELECT * FROM transactions WHERE trans_timestamp > '".$date_prime."' AND trans_timestamp < '".$endtime."' ORDER BY trans_timestamp ASC";
+						$query = "SELECT * FROM transactions WHERE trans_timestamp > '".$date_prime."' AND trans_timestamp < '".$endtime."'";
+						if(!$show_bw || !$show_color)
+						{
+							$query .= $show_bw ? " AND copies_bw > 0" : "";
+							$query .= $show_color ? " AND copies_color > 0" : "";
+						}
+						$query .= $clerk_filer;
+						$query .= " ORDER BY trans_timestamp ASC";
 					}
 					
 					$result = mysqli_query($dbconn, $query);
 					$translist = '<table class="moredata">
-							<tr><th>Trans ID:</th><th>Date:</th><th>Account Name:</th><th>BW</th><th>Color</th><th>Notes:</th></tr>';
-					while ($row = mysqli_fetch_array($result))
+							<tr><th>Trans ID:</th><th>Clerk:</th><th>Date:</th><th>Account Name:</th>'.($show_bw ? '<th>BW</th>' : '').($show_color ? '<th>Color</th>' : '').'<th>Notes:</th></tr>';
+					if($result)
 					{
-						static $i = 0;
-						$evenodd = ($i % 2) ? 'even' : 'odd';
-						$typeclass = '';
-						if ($row['trans_type'] == 'deposit') { $typeclass = ' deposit'; }
-						$notes = (!empty($row['trans_notes'])) ? '<span class="noteTip" title="'.$row['trans_notes'].'">View Notes</span>' : '&nbsp;';
-						// ORIGINAL WITH MINUTES $translist .= '<tr class="'.$evenodd.'"><td>'.$row['trans_id'].'</td><td>'.date('m-d-y g:ia',$row['trans_timestamp']).'</td><td><a href="?action=view_account&acct_id='.$row['acct_id'].'">'.getAcctNameById($row['acct_id']).'</a></td><td class="text-right'.$typeclass.'">'.$row['copies_bw'].'</td><td class="text-right'.$typeclass.'">'.$row['copies_color'].'</td><td>'.$notes.'</tr>'."\n";
-						$translist .= '<tr class="'.$evenodd.'"><td>'.$row['trans_id'].'</td><td>'.date('m-d-y',$row['trans_timestamp']).'</td><td><a href="?action=view_account&acct_id='.$row['acct_id'].'">'.getAcctNameById($row['acct_id']).'</a></td><td class="text-right'.$typeclass.'">'.$row['copies_bw'].'</td><td class="text-right'.$typeclass.'">'.$row['copies_color'].'</td><td>'.$notes.'</tr>'."\n";
-						$i++;
+						while ($row = mysqli_fetch_array($result))
+						{
+							// Determine if the transaction caused a negative balance.
+							if($show_neg_bal_only)
+							{
+								if($row['trans_type'] == 'debit')
+								{
+									$bw_bal = $row['startbal_bw'] - $row['copies_bw'];
+									$color_bal = $row['startbal_color'] - $row['copies_color'];
+								}
+								else
+								{
+									$bw_bal = $row['startbal_bw'] + $row['copies_bw'];
+									$color_bal = $row['startbal_color'] + $row['copies_color'];
+								}
+								
+								// If not negative balance, skip transaction
+								if($bw_bal >= 0 && $color_bal >= 0)
+								{
+									continue;
+								}
+							}
+							
+							static $i = 0;
+							$evenodd = ($i % 2) ? 'even' : 'odd';
+							$typeclass = '';
+							if ($row['trans_type'] == 'deposit') { $typeclass = ' deposit'; }
+							$notes = (!empty($row['trans_notes'])) ? '<span class="noteTip" title="'.$row['trans_notes'].'">View Notes</span>' : '&nbsp;';
+							// ORIGINAL WITH MINUTES $translist .= '<tr class="'.$evenodd.'"><td>'.$row['trans_id'].'</td><td>'.date('m-d-y g:ia',$row['trans_timestamp']).'</td><td><a href="?action=view_account&acct_id='.$row['acct_id'].'">'.getAcctNameById($row['acct_id']).'</a></td><td class="text-right'.$typeclass.'">'.$row['copies_bw'].'</td><td class="text-right'.$typeclass.'">'.$row['copies_color'].'</td><td>'.$notes.'</tr>'."\n";
+							$translist .= '<tr class="'.$evenodd.'"><td>'.$row['trans_id'].'</td><td>'.getClerkIniByCId($row['oper_id']).'</td><td>'.date('m-d-y',$row['trans_timestamp']).'</td><td><a href="?action=view_account&acct_id='.$row['acct_id'].'">'.getAcctNameById($row['acct_id']).'</a></td>'.($show_bw ? '<td class="text-right'.$typeclass.'">'.$row['copies_bw'].'</td>' : '').($show_color ? '<td class="text-right'.$typeclass.'">'.$row['copies_color'].'</td>' : '').'<td>'.$notes.'</tr>'."\n";
+							$i++;
+						}
 					}
 					$translist .= '</table>';
 					
@@ -788,6 +843,35 @@ else if ($action == 'view_reports')
 						'.$translist.'
 						<hr />
 					';
+					
+					if ($_SESSION['quickComplete']) { $delay = 250; } else { $delay = 1000; }
+					$js = "
+						var inputWord = $('clerk_name');
+				 
+						new Autocompleter.Request.JSON(inputWord, 'autofindclerk.php', {
+							'indicatorClass': 'autocompleter-loading',
+							'selectMode': 'type-ahead',
+							'delay': ".$delay."
+						});
+					";
+					
+					$html_act = '
+						<h3>Filter By:</h3>
+						<form action="?action=view_reports&obj=trans_by_date" method="post">
+							<dl class="w75">
+								<!--dt>Date:<br /><span class="noteTip" title="Enter just a single date to view all transactions for that day, or enter a date range to view all transactions within that range.">Help ?</span></dt><dd class="text-right"><input style="width:186px;" type="text" name="date_prime" id="date_prime" /> - <input style="width:186px;" type="text" name="date_end" id="date_end" /></dd-->
+								<dt style="font-size: 14px">Clerk Name:</dt><input style="width:186px;font-size: 16px" type="text" name="clerk_name" id="clerk_name" value="'.$clerk_name.'"/> <br/><br/>
+								<dt style="font-size: 14px">Negative Balances Only:</dt><dd><input type="checkbox" name="neg_bal_only" value="1"'.($show_neg_bal_only ? ' checked' : '').'/></dd>
+								<dt style="font-size: 14px">Type:</dt><br/>
+								<dt style="font-size: 14px">&nbsp;&nbsp;&nbsp;BW</dt><dd><input type="checkbox" name="show_bw" value="1"'.($show_bw ? ' checked' : '').'/></dd>
+								<dt style="font-size: 14px">&nbsp;&nbsp;&nbsp;Color</dt><dd><input type="checkbox" name="show_color" value="1"'.($show_color ? ' checked' : '').'/></dd>
+								<dt>&nbsp;</dt><dd class="text-right"><input type="submit" value="Filter" style="font-size:16px" /></dd>
+							</dl>
+							<input type="hidden" name="cmd" value="dateset" />
+							<input type="hidden" name="date_prime" value="'.$_POST['date_prime'].'"/>
+							<input type="hidden" name="date_end" value="'.$_POST['date_end'].'"/>
+						</form>
+						';
 				}
 				else
 				{
@@ -811,6 +895,8 @@ else if ($action == 'view_reports')
 								<dt>&nbsp;</dt><dd class="text-right"><input type="submit" value="View" /></dd>
 							</dl>
 							<input type="hidden" name="cmd" value="dateset" />
+							<input type="hidden" name="show_bw" value="1"/>
+							<input type="hidden" name="show_color" value="1"/>
 							</form>
 				';
 			}
