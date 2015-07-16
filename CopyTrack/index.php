@@ -1819,7 +1819,7 @@ else if ($action == 'change_settings')
 								<option value="Active"' . (($formV['v_status'] == 'Active') ? ' selected' : '') . '>Active</option>
 								<option value="Inactive"' . (($formV['v_status'] == 'Inactive') ? ' selected' : '') . '>Inactive</option>
 							</select></dd>
-						<dt>&nbsp;</dt><dd class="text-right"><input type="submit" value="Create" /></dd>
+						<dt>&nbsp;</dt><dd class="text-right"><input type="submit" value="Edit" /></dd>
 					</dl>
 					<input type="hidden" name="cmd" value="edit_acct" />
 					</form>
