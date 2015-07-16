@@ -679,7 +679,7 @@ else if ($action == 'view_reports')
 				
 				<hr />
 				
-			<h2>All Accounts:</h2>
+			<h2>All Accounts with Negative Balances:</h2>
 				'.$acctlist.'
 			';
 		}
