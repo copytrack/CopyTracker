@@ -12,6 +12,8 @@ $settings = simplexml_load_file("..\\copytrack-src\\settings.xml");
 include(__DIR__ . "\\..\\copytrack-src\\timezone.php");
 date_default_timezone_set($_TIMEZONE_);
 
+if(!isset($_SESSION['searchInactive'])) $_SESSION['searchInactive'] = true;
+
 if (isset($_GET['resetMode'])) //Change Session Settings
 {
 	switch ($_GET['resetMode'])
@@ -24,6 +26,9 @@ if (isset($_GET['resetMode'])) //Change Session Settings
 		break;
 		case "invertColor":
 		$_SESSION['invertColor'] = false;
+		break;
+		case "searchInactive":
+		$_SESSION['searchInactive'] = false;
 		break;
 	}
 }
@@ -41,10 +46,14 @@ if (isset($_GET['setMode']))
 		case "invertColor":
 		$_SESSION['invertColor'] = true;
 		break;
+		case "searchInactive":
+		$_SESSION['searchInactive'] = true;
+		break;
 		case "reset":
 		$_SESSION['migration'] = false;
 		$_SESSION['quickComplete'] = false;
 		$_SESSION['invertColor'] = false;
+		$_SESSION['searchInactive'] = false;
 		break;
 	}
 }
@@ -2212,7 +2221,7 @@ echo $html;
 
 	<div id="footer" class="grid_8 alpha">
 		<div>
-			<a href="#" id="modSessionCtrl">Show Session Settings</a><span id="modSession"><?php if (!$_SESSION['migration']) { echo '<a href="?setMode=migration">Turn on Migration Mode</a>'; } else { echo '<a href="?resetMode=migration">Turn off Migration Mode</a>'; } ?> | <?php if (!$_SESSION['quickComplete']) { echo '<a href="?setMode=quickComplete">Increase Autocompletion Speed</a>'; } else { echo '<a href="?resetMode=quickComplete">Decrease Autocompletion Speed</a>'; } ?> | <?php if (!$_SESSION['invertColor']) { echo '<a href="?setMode=invertColor">Invert Color</a>'; } else { echo '<a href="?resetMode=invertColor">Revert Color</a>'; } ?> &bull; <a href="?setMode=reset">Reset All</a></span>
+			<a href="#" id="modSessionCtrl">Show Session Settings</a><span id="modSession"><?php if (!$_SESSION['migration']) { echo '<a href="?setMode=migration">Turn on Migration Mode</a>'; } else { echo '<a href="?resetMode=migration">Turn off Migration Mode</a>'; } ?> | <?php if (!$_SESSION['quickComplete']) { echo '<a href="?setMode=quickComplete">Increase Autocompletion Speed</a>'; } else { echo '<a href="?resetMode=quickComplete">Decrease Autocompletion Speed</a>'; } ?> | <?php if (!$_SESSION['invertColor']) { echo '<a href="?setMode=invertColor">Invert Color</a>'; } else { echo '<a href="?resetMode=invertColor">Revert Color</a>'; } ?> |<br/> <?php if (!$_SESSION['searchInactive']) { echo '<a href="?setMode=searchInactive">Search Active Accounts Only</a>'; } else { echo '<a href="?resetMode=searchInactive">Search All Accounts</a>'; } ?> &bull; <a href="?setMode=reset">Reset All</a></span>
 		</div>
 	</div>
 </div>
