@@ -8,6 +8,8 @@ header('X-UA-Compatible: IE=IE8');
 
 session_start();
 
+$settings = simplexml_load_file("..\\copytrack-src\\settings.xml");
+
 if (isset($_GET['resetMode'])) //Change Session Settings
 {
 	switch ($_GET['resetMode'])
@@ -44,9 +46,6 @@ if (isset($_GET['setMode']))
 		break;
 	}
 }
-
-// Initialize if negative balance are allowed
-if (!isset($_SESSION['allow_neg_balances'])) $_SESSION['allow_neg_balances'] = false;
 
 $subaction = (isset($_GET['sub'])) ? $_GET['sub'] : false;
 
@@ -114,6 +113,7 @@ function genAcctHtmlBlock($id)
 					<dt>Copies:</dt><dd><span style="border-left:5px solid #000;padding-left:5px;width:32%;display:inline-block;" id="fb_bw">'.$acctrow['copies_bw'].' BW</span><span style="border-left:5px solid #00ff00;padding-left:5px;width:32%;display:inline-block;" id="fb_color">'.$acctrow['copies_color'].' Color</span></dd>
 					<dt>Notes:</dt><dd>'.$acctrow['account_notes'].'</dd>
 					<dt>Status:</dt><dd>'.$acctrow['status'].'</dd>
+					<dt>Negative Balances:</dt><dd>'.($acctrow['allow_neg_bal'] ? 'Allowed' : 'Not Allowed').'</dd>
 				</dl>';
 	return $html;
 }
@@ -206,8 +206,11 @@ if (isset($_GET['notice']))
 		case "idexists":
 			$notice = 'An account with that ID already exists; please use a different ID.';
 			break;
+		case "negbalnotenabled":
+			$notice = 'Negative balances are not enabled.';
+			break;
 		case "negbalnotallowed":
-			$notice = 'Negative balances are not allowed.';
+			$notice = 'Negative balances are not allowed for this account.';
 			break;
 		case "savesuccessful":
 			$notice = 'Save successful.';
@@ -259,11 +262,12 @@ if ($action == 'add_account')
 				die("Acct already exists");
 			}
 			
-			$query = "INSERT INTO accounts (account_name, account_phone, account_notes, status, creation_date)
+			$query = "INSERT INTO accounts (account_name, account_phone, account_notes, status, allow_neg_bal, creation_date)
 						VALUES ('".$formV['v_name']."',
 								'".$formV['v_phone']."',
 								'".$formV['v_notes']."',
 								'Active',
+								".($settings->allow_default_neg_bal == 'true' ? "TRUE" : "FALSE").",
 								'".$formV['v_time']."')";
 		mysqli_query($dbconn, $query) or die('Failure');
 		
@@ -315,6 +319,7 @@ if ($action == 'edit_account')
 		$formV['v_phone'] = $_POST['account_phone'];
 		$formV['v_notes'] = filter($_POST['account_notes']);
 		$formV['v_status'] = $_POST['status'];
+		$formV['v_allow_neg_bal'] = isset($_POST['allow_neg_bal']) && $_POST['allow_neg_bal'] ? 1 : 0;
 		if (isset($_POST['account_phone']))
 		{
 			if ((strlen($_POST['account_phone']) != 10 || !is_numeric($_POST['account_phone'])) && $_POST['account_phone'] != '')
@@ -331,10 +336,15 @@ if ($action == 'edit_account')
 			SET account_name = '" . $formV['v_name'] . "',
 				account_phone = '" . $formV['v_phone'] . "',
 				account_notes = '" . $formV['v_notes'] . "',
-				status = '" . $formV['v_status'] . "'
+				status = '" . $formV['v_status'] . "',
+				allow_neg_bal = " . ($formV['v_allow_neg_bal'] ? "TRUE" : "FALSE") ."
 			WHERE acct_id = '" . $formV['acct_id']."' LIMIT 1";
 
-		mysqli_query($dbconn, $sql) or die('Failure');
+		$result = mysqli_query($dbconn, $sql);// or die('Failure');
+		if (!$result)
+		{
+			die("Error: %s\n" . mysqli_error($dbconn));
+		}
 		
 		$query = " SELECT acct_id FROM accounts WHERE acct_id = '".$formV['acct_id']."' LIMIT 1";
 		$result = mysqli_query($dbconn, $query);
@@ -356,6 +366,7 @@ if ($action == 'edit_account')
 			$formV['v_phone'] = (strlen($acctrow['account_phone']) == 10) ? $acctrow['account_phone'] : '';
 			$formV['v_notes'] = $acctrow['account_notes'];
 			$formV['v_status'] = $acctrow['status'];
+			$formV['v_allow_neg_bal'] = $acctrow['allow_neg_bal'];
 		}
 	
 		$js = '
@@ -367,7 +378,7 @@ if ($action == 'edit_account')
 		<h2>Edit Account</h2>
 			'.$notice.'
 			<form action="?action=edit_account&acct_id='.$acct_id.'" method="POST">
-			<dl class="w25">
+			<dl class="w33">
 				<dt>Name: </dt><dd class="text-right"><input class="full" type="text" name="account_name" value="'.$formV['v_name'].'" /></dd>
 				<dt>Phone #: </dt><dd class="text-right"><input class="full '.$formV['f_phone'].'" '.$formV['t_phone'].' type="text" name="account_phone" id="account_phone" value="'.$formV['v_phone'].'" /></dd>
 				<dt>Notes: </dt><dd class="text-right"><textarea class="txtarea" name="account_notes">'.$formV['v_notes'].'</textarea></dd>
@@ -376,6 +387,7 @@ if ($action == 'edit_account')
 						<option value="Active"'.(($formV['v_status'] == 'Active') ? ' selected' : '').'>Active</option>
 						<option value="Inactive"'.(($formV['v_status'] == 'Inactive') ? ' selected' : '').'>Inactive</option>
 					</select></dd>
+				<dt>Allow negative balances</dt><dd class="text-right"><input type="checkbox" name="allow_neg_bal" value="1"'.($formV['v_allow_neg_bal'] ? ' checked' : '').'/></dd>
 				<dt>&nbsp;</dt><dd class="text-right"><input type="submit" value="Edit" /></dd>
 			</dl>
 			<input type="hidden" name="cmd" value="edit_acct" />
@@ -1085,12 +1097,19 @@ else if ($action == 'do_transaction')
 		die("Authentication verification denial safeguard event.");
 	}
 	
-	// If negative balance, check if it's allowed (only checked if trans_type is debit).
-	if (($postdata['bw'] > 0 && $bw_new < 0 || ($postdata['color'] > 0 && $color_new < 0)) && !$_SESSION['allow_neg_balances'] && $postdata['trans_type'] == 'debit')
+	// If negative balance, check if it's enabled and allowed for the user (only checked if trans_type is debit).
+	if (($postdata['bw'] > 0 && $bw_new < 0 || ($postdata['color'] > 0 && $color_new < 0)) && ($settings->enable_neg_bal == 'false' || !$row['allow_neg_bal']) && $postdata['trans_type'] == 'debit')
 	{
-		//die("startbal_color: " . $postdata['startbal_color']);
-		header("Location: ?action=view_account&acct_id=".$postdata['acct_id'].$authUriAppend."&notice=negbalnotallowed&nbw=".$postdata['bw']."&ncolor=".$postdata['color']);
-		die("Negative balances not allowed.");
+		if($settings->enable_neg_bal == 'false')
+		{
+			header("Location: ?action=view_account&acct_id=".$postdata['acct_id'].$authUriAppend."&notice=negbalnotenabled&nbw=".$postdata['bw']."&ncolor=".$postdata['color']);
+			die("Negative balances not enabled.");
+		}
+		else
+		{
+			header("Location: ?action=view_account&acct_id=".$postdata['acct_id'].$authUriAppend."&notice=negbalnotallowed&nbw=".$postdata['bw']."&ncolor=".$postdata['color']);
+			die("Negative balances not allowed for this account.");
+		}
 	}
 
 	$sql = "UPDATE accounts
@@ -1469,10 +1488,15 @@ else if ($action == 'change_settings')
 	{
 		if(!isset($_SESSION['clerk_id'])) $_SESSION['clerk_id'] = $_POST['clerk_id'];
 		
-		
+		// Save settings
 		if($cmd == 'save')
 		{
-			$_SESSION['allow_neg_balances'] = isset($_POST['allow_neg_balances']) && $_POST['allow_neg_balances'] ? true : false;
+			$settings->enable_neg_bal = isset($_POST['enable_neg_bal']) && $_POST['enable_neg_bal'] ? 'true' : 'false';
+			$settings->allow_default_neg_bal = isset($_POST['allow_default_neg_bal']) && $_POST['allow_default_neg_bal'] ? 'true' : 'false';
+			$settings->asXml("..\\copytrack-src\\settings.xml");
+			//$_SESSION['allow_neg_balances'] = isset($_POST['allow_neg_balances']) && $_POST['allow_neg_balances'] ? true : false;
+			//$_SESSION['enable_neg_bal'] = isset($_POST['enable_neg_bal']) && $_POST['enable_neg_bal'] ? true : false;
+			//$_SESSION['allow_default_neg_bal'] = isset($_POST['allow_default_neg_bal']) && $_POST['allow_default_neg_bal'] ? true : false;
 			
 			header("Location: ?action=change_settings&notice=savesuccessful");
 			die("Save successful");
@@ -1857,6 +1881,18 @@ else if ($action == 'change_settings')
 		
 		else
 		{
+			$js = '
+			var checkbox = document.getElementById("enable_neg_bal");
+			document.getElementById("allow_default_neg_bal").disabled = !checkbox.checked;
+            if (checkbox.addEventListener) {
+                checkbox.addEventListener ("CheckboxStateChange", 
+					function(event){
+						var checkbox = event.target;
+						document.getElementById("allow_default_neg_bal").disabled = !checkbox.checked;
+						document.getElementById("allow_default_neg_bal_text").disabled = !checkbox.checked;
+					}, false);
+            }';
+		
 			$html = $notice.'
 			<h2>Change Settings</h2>
 			<p>
@@ -1865,8 +1901,10 @@ else if ($action == 'change_settings')
 			
 			<h3>Configure Copy Tracker:</h3>
 			<form action="?action=change_settings" method="post">
-			<dl class="w33">
-				<dt>Allow Negative Balances?:</dt><dd><input type="checkbox" name="allow_neg_balances"'.($_SESSION['allow_neg_balances'] ? ' checked' : '').' value="1"/></dd>
+			<dl class="w50">
+				<!--dt>Allow Negative Balances?:</dt><dd><input type="checkbox" name="allow_neg_balances"'.($_SESSION['allow_neg_balances'] ? ' checked' : '').' value="1"/></dd-->
+				<dt>Enable Negative Balances</dt><dd><input type="checkbox" id="enable_neg_bal" name="enable_neg_bal"'.($settings->enable_neg_bal == 'true' ? ' checked' : '').' value="1"/></dd>
+				<dt>Allow Negative Balances by Default?</dt><dd><input type="checkbox" id="allow_default_neg_bal" name="allow_default_neg_bal"'.($settings->allow_default_neg_bal == 'true' ? ' checked' : '').' value="1"/></dd>
 				<dt>&nbsp;</dt><dd class="text-right"><input type="submit" value="Save" /></dd>
 			</dl>
 			<input type="hidden" name="cmd" value="save" />
