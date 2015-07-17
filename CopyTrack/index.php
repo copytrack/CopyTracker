@@ -1501,7 +1501,7 @@ else if ($action == 'find_account' || $action == 'view_account')
 		'.$notice.'
 		<form action="?action=find_account'.$redirect.$search_clerk.'" method="POST">
 		<dl class="w25">
-			<dt>Name: </dt><dd class="text-right"><input class="full" type="text" id="name" name="name" /></dd>
+			<dt>Name or Phone #: </dt><dd class="text-right"><input class="full" type="text" id="name" name="name" /></dd>
 			<dt>&nbsp;</dt><dd class="text-right"><input type="submit" value="Find" /></dd>
 		</dl>
 		</form>
