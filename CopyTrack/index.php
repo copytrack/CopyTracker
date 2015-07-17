@@ -223,7 +223,7 @@ if (isset($_GET['notice']))
 $html = '';
 ///////////////////////////////////////
 // ADD ACCOUNT
-//////////////////////////////////////
+///////////////////////////////////////
 if ($action == 'add_account')
 {
 	// NOTE: unset clerk_id in all actions except for change_settings for security purposes.
@@ -307,7 +307,7 @@ if ($action == 'add_account')
 
 ///////////////////////////////////////
 // EDIT ACCOUNT
-//////////////////////////////////////
+///////////////////////////////////////
 if ($action == 'edit_account')
 {
 	// NOTE: unset clerk_id in all actions except for change_settings for security purposes.
@@ -400,7 +400,7 @@ if ($action == 'edit_account')
 
 ///////////////////////////////////////
 // VIEW TRANSACTIONS
-//////////////////////////////////////
+///////////////////////////////////////
 
 else if ($action == 'view_transactions')
 {
@@ -409,7 +409,7 @@ else if ($action == 'view_transactions')
 	
 	///////////////////////////////////////
 	// VIEW SINGLE TRANSACTION RESULT
-	//////////////////////////////////////
+	///////////////////////////////////////
 
 	if ($trans_id)
 	{
@@ -463,7 +463,7 @@ else if ($action == 'view_transactions')
 	}
 	///////////////////////////////////////
 	// VIEW ACCOUNT TRANSACTIONS
-	//////////////////////////////////////
+	///////////////////////////////////////
 	else if ($acct_id)
 	{
 		$query = "SELECT * FROM accounts WHERE acct_id = '".$acct_id."' LIMIT 1";
@@ -509,7 +509,7 @@ else if ($action == 'view_transactions')
 	}
 	///////////////////////////////////////
 	// VIEW CLERK TRANSACTIONS
-	//////////////////////////////////////
+	///////////////////////////////////////
 	else if ($oper_id)
 	{
 		// Get clerk info
@@ -550,6 +550,9 @@ else if ($action == 'view_transactions')
 	}
 }
 
+///////////////////////////////////////
+// VIEW REPORTS
+///////////////////////////////////////
 else if ($action == 'view_reports')
 {
 	// NOTE: unset clerk_id in all actions except for change_settings for security purposes.
@@ -557,6 +560,9 @@ else if ($action == 'view_reports')
 	
 	if ($obj)
 	{
+		///////////////////////////////////////
+		// ALL ACCOUNTS
+		///////////////////////////////////////
 		if ($obj == 'all_accounts')
 		{
 			$sortr = (isset($_GET['reverse'])) ? " DESC" : " ASC";
@@ -628,6 +634,9 @@ else if ($action == 'view_reports')
 					
 		}
 		
+		///////////////////////////////////////
+		// VIEW NEGATIVE BALANCES
+		///////////////////////////////////////
 		else if ($obj == 'view_negative_balances')
 		{
 			$sortr = (isset($_GET['reverse'])) ? " DESC" : " ASC";
@@ -698,6 +707,9 @@ else if ($action == 'view_reports')
 			';
 		}
 		
+		///////////////////////////////////////
+		// ALL TRANSACTIONS
+		///////////////////////////////////////
 		else if ($obj == 'all_trans')
 		{
 			$query = "SELECT * FROM transactions ORDER BY trans_timestamp DESC";
@@ -723,6 +735,9 @@ else if ($action == 'view_reports')
 			';
 		}
 		
+		///////////////////////////////////////
+		// TRANSACTIONS BY DATE
+		///////////////////////////////////////
 		else if ($obj == 'trans_by_date')
 		{
 			if ($cmd == 'dateset')
@@ -916,6 +931,9 @@ else if ($action == 'view_reports')
 			}
 		}
 		
+		///////////////////////////////////////
+		// INACTIVE CUSTOMERS SINCE DATE
+		///////////////////////////////////////
 		else if($obj == 'inactivity')
 		{
 			if ($cmd == 'dateset')
@@ -1046,6 +1064,9 @@ else if ($action == 'view_reports')
 	}
 }
 
+///////////////////////////////////////
+// DO TRANSACTION
+///////////////////////////////////////
 else if ($action == 'do_transaction')
 {
 	// NOTE: unset clerk_id in all actions except for change_settings for security purposes.
@@ -1152,6 +1173,9 @@ else if ($action == 'do_transaction')
 		
 }
 
+///////////////////////////////////////
+// FIND ACCOUNT / VIEW ACCOUNT
+///////////////////////////////////////
 else if ($action == 'find_account' || $action == 'view_account')
 {
 	// NOTE: unset clerk_id in all actions except for change_settings for security purposes.
@@ -1334,6 +1358,9 @@ else if ($action == 'find_account' || $action == 'view_account')
 	
 	";
 	
+	///////////////////////////////////////
+	// ADD COPIES
+	///////////////////////////////////////
 	if ($obj == "add_copies")
 	{
 		$action_type = 'deposit'; $action_text = 'Deposit';
@@ -1358,6 +1385,9 @@ else if ($action == 'find_account' || $action == 'view_account')
 	</div>';
 		
 	}
+	///////////////////////////////////////
+	// DEBIT COPIES
+	///////////////////////////////////////
 	else
 	{
 		$action_type = 'debit'; $action_text = 'Debit';
@@ -1473,6 +1503,9 @@ else if ($action == 'find_account' || $action == 'view_account')
 	}
 }
 
+///////////////////////////////////////
+// CHANGE SETTINGS
+///////////////////////////////////////
 else if ($action == 'change_settings')
 {
 	$valid_id = false;
@@ -1496,14 +1529,14 @@ else if ($action == 'change_settings')
 			$settings->enable_neg_bal = isset($_POST['enable_neg_bal']) && $_POST['enable_neg_bal'] ? 'true' : 'false';
 			$settings->allow_default_neg_bal = isset($_POST['allow_default_neg_bal']) && $_POST['allow_default_neg_bal'] ? 'true' : 'false';
 			$settings->asXml("..\\copytrack-src\\settings.xml");
-			//$_SESSION['allow_neg_balances'] = isset($_POST['allow_neg_balances']) && $_POST['allow_neg_balances'] ? true : false;
-			//$_SESSION['enable_neg_bal'] = isset($_POST['enable_neg_bal']) && $_POST['enable_neg_bal'] ? true : false;
-			//$_SESSION['allow_default_neg_bal'] = isset($_POST['allow_default_neg_bal']) && $_POST['allow_default_neg_bal'] ? true : false;
 			
 			header("Location: ?action=change_settings&notice=savesuccessful");
 			die("Save successful");
 		}
 		
+		///////////////////////////////////////
+		// FIND CLERK / VIEW CLERK
+		///////////////////////////////////////
 		if($subaction == 'find_clerk' || $subaction == 'view_clerk')
 		{
 			if ($name || $oper_id)
@@ -1567,6 +1600,9 @@ else if ($action == 'change_settings')
 			}
 		}
 		
+		///////////////////////////////////////
+		// ADD CLERK
+		///////////////////////////////////////
 		else if($subaction == 'add_clerk')
 		{
 			$formV = array();
@@ -1686,6 +1722,9 @@ else if ($action == 'change_settings')
 			}
 		}
 		
+		///////////////////////////////////////
+		// EDIT CLERK
+		///////////////////////////////////////
 		else if($subaction == 'edit_clerk')
 		{
 			$formV = array();
@@ -1817,6 +1856,9 @@ else if ($action == 'change_settings')
 			}
 		}
 		
+		///////////////////////////////////////
+		// VIEW CLERKS
+		///////////////////////////////////////
 		else if($subaction == 'view_clerks')
 		{
 			$sortr = (isset($_GET['reverse'])) ? " DESC" : " ASC";
@@ -1947,6 +1989,9 @@ else if ($action == 'change_settings')
 	}
 }
 
+///////////////////////////////////////
+// DEFAULT (HOME PAGE)
+///////////////////////////////////////
 else if ($action == 'default')
 {
 	$html = '
