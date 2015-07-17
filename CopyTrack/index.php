@@ -2,13 +2,15 @@
 error_reporting (E_ALL ^ E_NOTICE);
 
 include(__DIR__ . "\\..\\copytrack-src\\credentials.php");
-include(__DIR__ . "\\..\\copytrack-src\\timezone.php");
 
 header('X-UA-Compatible: IE=IE8');
 
 session_start();
 
 $settings = simplexml_load_file("..\\copytrack-src\\settings.xml");
+
+include(__DIR__ . "\\..\\copytrack-src\\timezone.php");
+date_default_timezone_set($_TIMEZONE_);
 
 if (isset($_GET['resetMode'])) //Change Session Settings
 {

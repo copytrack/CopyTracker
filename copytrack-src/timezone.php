@@ -1,3 +1,3 @@
 <?php
-date_default_timezone_set('America/Denver');
+$_TIMEZONE_ = 'America/Denver';
 ?>
