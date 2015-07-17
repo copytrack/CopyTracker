@@ -49,8 +49,6 @@ if (isset($_GET['setMode']))
 	}
 }
 
-$subaction = (isset($_GET['sub'])) ? $_GET['sub'] : false;
-
 // Constant: CC = CSS Style, following term is 'what'
 define('CC_FIELD_INVALID'," invalid errorTip");
 
