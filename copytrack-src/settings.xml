@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<settings>
+  <enable_neg_bal>false</enable_neg_bal>
+  <allow_default_neg_bal>false</allow_default_neg_bal>
+</settings>

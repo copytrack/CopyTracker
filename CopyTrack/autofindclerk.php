@@ -1,7 +1,5 @@
 <?php
 
-session_start();
-
 include(__DIR__ . "\\..\\copytrack-src\\credentials.php");
  
 // Processing a 6 MB dictionary file!
@@ -13,18 +11,18 @@ mysqli_set_charset($dbconn,'utf8'); // Necessary for char data to be pulled from
  
 $found = array();
 $limit = 15;
- 
+
 $value = $_POST['value'];
 if (!$value) { $value = $_GET['valu']; }
- 
+
 if (is_string($value) )
 {
-	$query = "SELECT account_name, account_phone FROM accounts".($_SESSION['searchInactive'] ? " WHERE status<>'Inactive'" : "")." ORDER BY account_name";
+	$query = "SELECT clerk_name FROM operators ORDER BY clerk_name";
 	$result = mysqli_query($dbconn, $query);
 	$words = '';
 	while ($row = mysqli_fetch_array($result))
 	{
-		$words .= $row['account_name'] . "\n" . $row['account_phone'] . "\n";
+		$words .= $row['clerk_name'] . "\n";
 	}
 	preg_match_all('/^(.*)'. preg_quote($value) .'(.*)$/mi', $words, $match);
 	$found = array_slice(array_values($match[0]), 0, $limit);
@@ -32,5 +30,5 @@ if (is_string($value) )
  
 header('Content-type: application/json');
 echo json_encode($found);
- 
+
 ?>

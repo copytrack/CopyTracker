@@ -8,6 +8,8 @@ CREATE TABLE accounts (
 	account_notes mediumtext,
 	copies_bw mediumint(8) DEFAULT '0' NOT NULL,
 	copies_color mediumint(8) DEFAULT '0' NOT NULL,
+	status varcar(10) DEFAULT 'Active' NOT NULL,
+	allow_neg_bal BOOLEAN DEFAULT FALSE NOT NULL,
 	PRIMARY KEY (acct_id)
 ) CHARACTER SET `utf8` COLLATE `utf8_bin`;
 
@@ -26,6 +28,8 @@ CREATE TABLE transactions (
 CREATE TABLE operators (
 	oper_id mediumint(8) UNSIGNED NOT NULL auto_increment,
 	clerk_id mediumint(8) UNSIGNED DEFAULT '0' NOT NULL,
+	level tinyint(1) UNSIGNED NOT NULL,
+	status varchar(10) DEFAULT 'Active' NOT NULL,
 	clerk_name varchar(255) DEFAULT '<i>Name not set.</i>' NOT NULL,
 	clerk_initials varchar(4) DEFAULT '--' NOT NULL,
 	PRIMARY KEY (oper_id)
