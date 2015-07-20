@@ -486,10 +486,7 @@ else if ($action == 'view_transactions')
 			else { $rowlist .= '<tr class="odd">'; }
 			$m = ($row['trans_type'] == 'deposit') ? '<span class="mkg">+</span>' : '<span glass="mkr"></span>';
 			if ($row['trans_notes']) { $rownotes = '<span title="'.$row['trans_notes'].'" class="noteTip">Mouse over to view</span>'; } else { $rownotes = ''; }
-			// ORIGINAL WITH MINUTES 
-			//This was removed because the exact times are off and I don't know why.
-			//$rowlist .= '<td class="text-right">'.$row['trans_id'].'</td><td>'.getClerkIniByCId($row['oper_id']).'</td><td>'.date('m-d-y g:ia',$row['trans_timestamp']).'</td><td class="text-right">'.$m.$row['copies_bw'].'</td><td class="text-right">'.$m.$row['copies_color'].'</td><td>'.$rownotes.'</td></tr>';
-			$rowlist .= '<td class="text-right">'.$row['trans_id'].'</td><td>'.getClerkIniByCId($row['oper_id']).'</td><td>'.date('m-d-y',$row['trans_timestamp']).'</td><td class="text-right">'.$m.$row['copies_bw'].'</td><td class="text-right">'.$m.$row['copies_color'].'</td><td>'.$rownotes.'</td></tr>';
+			$rowlist .= '<td class="text-right">'.$row['trans_id'].'</td><td>'.getClerkIniByCId($row['oper_id']).'</td><td>'.date('m-d-y g:ia',$row['trans_timestamp']).'</td><td class="text-right">'.$m.$row['copies_bw'].'</td><td class="text-right">'.$m.$row['copies_color'].'</td><td>'.$rownotes.'</td></tr>';
 			$c++;
 		}
 		$rowlist .= '</table>';
