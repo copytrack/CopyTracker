@@ -19,12 +19,12 @@ if (!$value) { $value = $_GET['valu']; }
  
 if (is_string($value) )
 {
-	$query = "SELECT account_name, account_phone FROM accounts".($_SESSION['searchInactive'] ? " WHERE status<>'Inactive'" : "")." ORDER BY account_name";
+	$query = "SELECT account_name FROM accounts".($_SESSION['searchInactive'] ? " WHERE status<>'Inactive'" : "")." ORDER BY account_name";
 	$result = mysqli_query($dbconn, $query);
 	$words = '';
 	while ($row = mysqli_fetch_array($result))
 	{
-		$words .= $row['account_name'] . "\n" . $row['account_phone'] . "\n";
+		$words .= $row['account_name'] . "\n";
 	}
 	preg_match_all('/^(.*)'. preg_quote($value) .'(.*)$/mi', $words, $match);
 	$found = array_slice(array_values($match[0]), 0, $limit);
