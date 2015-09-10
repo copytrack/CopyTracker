@@ -121,7 +121,7 @@ function genAcctHtmlBlock($id)
 					<dt>Name: </dt><dd>'.$acctrow['account_name'].'</dd>
 					<dt>Phone: </dt><dd>'.$acctrow['account_phone'].'</dd>
 					<dt>Copies:</dt><dd><span style="border-left:5px solid #000;padding-left:5px;width:32%;display:inline-block;" id="fb_bw">'.$acctrow['copies_bw'].' BW</span><span style="border-left:5px solid #00ff00;padding-left:5px;width:32%;display:inline-block;" id="fb_color">'.$acctrow['copies_color'].' Color</span></dd>
-					<dt>Notes:</dt><dd>'.$acctrow['account_notes'].'</dd>
+					<dt>Notes:</dt><dd>'.nl2br($acctrow['account_notes']).'</dd>
 					<dt>Status:</dt><dd>'.$acctrow['status'].'</dd>
 					<dt>Negative Balances:</dt><dd>'.($acctrow['allow_neg_bal'] ? 'Allowed' : 'Not Allowed').'</dd>
 				</dl>';
