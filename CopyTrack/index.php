@@ -1987,7 +1987,7 @@ else if ($action == 'change_settings')
 				<br /><br /><br />
 				<form action="?action=change_settings" method="post">
 					Enter Clerk ID to Continue<br />
-					<input type="password" length="4" size="4" name="clerk_id" /> <input type="submit" value="Go" />
+					<input type="password" length="4" size="4" name="clerk_id" autofocus="autofocus" /> <input type="submit" value="Go" />
 				</form>
 				<br /><br /><br /><br />
 			</div>';
