@@ -1031,8 +1031,26 @@ else if ($action == 'view_reports')
 	
 	else
 	{
+		$query = "SELECT sum(copies_bw), sum(copies_color), count(acct_id) FROM accounts";
+		$result = mysqli_query($GLOBALS["___mysqli_ston"], $query);
+		$overall = mysqli_fetch_array($result);
+		$query = "SELECT count(trans_id), sum(copies_bw), sum(copies_color) FROM transactions";
+		$result = mysqli_query($GLOBALS["___mysqli_ston"], $query);
+		$overall2 = mysqli_fetch_array($result);
 		$html = '
 	<h2>View Reports</h2>
+		<h3>Summary:</h3>
+		<div class="grid_4 alpha">
+			Total Accounts: '.$overall['count(acct_id)'].'<br />
+			Total BW Copies Avail: '.$overall['sum(copies_bw)'].'<br />
+			Total Color Avail: '.$overall['sum(copies_color)'].'<br /><br />
+		</div>
+			
+		<div class="grid_4 omega">
+			Total Transactions: '.$overall2['count(trans_id)'].'<br />
+			Total BW Copies Processed: '.$overall2['sum(copies_bw)'].'<br />
+			Total Color Processed: '.$overall2['sum(copies_color)'].'<br /><br />
+		</div>
 		<div class="grid_4 alpha">
 			<h3>By Account:</h3>
 			<ul class="menu3">
