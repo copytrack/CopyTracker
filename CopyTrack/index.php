@@ -113,6 +113,7 @@ function genAcctHtmlBlock($id)
 	$acctrow = mysqli_fetch_array($result);
 	
 	if (strlen($acctrow['account_phone']) != 10) { $acctrow['account_phone'] = '&nbsp;'; }
+	if (empty($acctrow['account_notes'])) {$acctrow['account_notes'] = '&nbsp;';}
 	
 	$html = '
 			<h2><span id="acct_id">'.$acctrow['acct_id'].'</span>Account</h2>
