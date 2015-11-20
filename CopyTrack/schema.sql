@@ -8,7 +8,7 @@ CREATE TABLE accounts (
 	account_notes mediumtext,
 	copies_bw mediumint(8) DEFAULT '0' NOT NULL,
 	copies_color mediumint(8) DEFAULT '0' NOT NULL,
-	status varcar(10) DEFAULT 'Active' NOT NULL,
+	status varchar(10) DEFAULT 'Active' NOT NULL,
 	allow_neg_bal BOOLEAN DEFAULT FALSE NOT NULL,
 	PRIMARY KEY (acct_id)
 ) CHARACTER SET `utf8` COLLATE `utf8_bin`;
