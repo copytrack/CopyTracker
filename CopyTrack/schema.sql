@@ -20,7 +20,6 @@ CREATE TABLE transactions (
 	copies_bw mediumint(8) DEFAULT '0' NOT NULL,
 	copies_color mediumint(8) DEFAULT '0' NOT NULL,
 	startbal_bw mediumint(8) DEFAULT '0' NOT NULL,
-	startbal_bw mediumint(8) DEFAULT '0' NOT NULL,
 	oper_id mediumint(8) DEFAULT '0' NOT NULL,
 	PRIMARY KEY (trans_id)
 ) CHARACTER SET `utf8` COLLATE `utf8_bin`;
