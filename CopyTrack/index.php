@@ -694,15 +694,15 @@ else if ($action == 'view_reports')
 			$html = '
 			<h2>Overall:</h2>
 				<div class="grid_4 alpha">
-					Total Accounts: '.$overall['count(acct_id)'].'<br />
-					Total BW Copies Avail: '.$overall['sum(copies_bw)'].'<br />
-					Total Color Avail: '.$overall['sum(copies_color)'].'<br /><br />
+					Total Accounts: '.number_format ($overall['count(acct_id)']).'<br />
+					Total BW Copies Avail: '.number_format ($overall['sum(copies_bw)']).'<br />
+					Total Color Avail: '.number_format ($overall['sum(copies_color)']).'<br /><br />
 				</div>
 				
 				<div class="grid_4 omega">
-					Total Transactions: '.$overall2['count(trans_id)'].'<br />
-					Total BW Copies Processed: '.$overall2['sum(copies_bw)'].'<br />
-					Total Color Processed: '.$overall2['sum(copies_color)'].'<br /><br />
+					Total Transactions: '.number_format ($overall2['count(trans_id)']).'<br />
+					Total BW Copies Processed: '.number_format ($overall2['sum(copies_bw)']).'<br />
+					Total Color Processed: '.number_format ($overall2['sum(copies_color)']).'<br /><br />
 				</div>
 				
 				<hr />
@@ -1041,15 +1041,15 @@ else if ($action == 'view_reports')
 	<h2>View Reports</h2>
 		<h3>Summary:</h3>
 		<div class="grid_4 alpha">
-			Total Accounts: '.$overall['count(acct_id)'].'<br />
-			Total BW Copies Avail: '.$overall['sum(copies_bw)'].'<br />
-			Total Color Avail: '.$overall['sum(copies_color)'].'<br /><br />
+			Total Accounts: '.number_format ($overall['count(acct_id)']).'<br />
+			Total BW Copies Avail: '.number_format ($overall['sum(copies_bw)']).'<br />
+			Total Color Avail: '.number_format ($overall['sum(copies_color)']).'<br /><br />
 		</div>
 			
 		<div class="grid_4 omega">
-			Total Transactions: '.$overall2['count(trans_id)'].'<br />
-			Total BW Copies Processed: '.$overall2['sum(copies_bw)'].'<br />
-			Total Color Processed: '.$overall2['sum(copies_color)'].'<br /><br />
+			Total Transactions: '.number_format ($overall2['count(trans_id)']).'<br />
+			Total BW Copies Processed: '.number_format ($overall2['sum(copies_bw)']).'<br />
+			Total Color Processed: '.number_format ($overall2['sum(copies_color)']).'<br /><br />
 		</div>
 		<div class="grid_4 alpha">
 			<h3>By Account:</h3>
