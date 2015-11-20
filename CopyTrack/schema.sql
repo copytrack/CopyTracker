@@ -4,11 +4,11 @@ CREATE TABLE accounts (
 	creation_date int(11) UNSIGNED DEFAULT '0' NOT NULL,
 	req_trans_note tinyint(1) UNSIGNED DEFAULT '0' NOT NULL,
 	account_name varchar(255) DEFAULT '' NOT NULL,
-	account_phone bigint(10) UNSIGNED DEFAULT '',
+	account_phone bigint(10) UNSIGNED DEFAULT '0',
 	account_notes mediumtext,
 	copies_bw mediumint(8) DEFAULT '0' NOT NULL,
 	copies_color mediumint(8) DEFAULT '0' NOT NULL,
-	status varcar(10) DEFAULT 'Active' NOT NULL,
+	status varchar(10) DEFAULT 'Active' NOT NULL,
 	allow_neg_bal BOOLEAN DEFAULT FALSE NOT NULL,
 	PRIMARY KEY (acct_id)
 ) CHARACTER SET `utf8` COLLATE `utf8_bin`;
@@ -19,7 +19,6 @@ CREATE TABLE transactions (
 	trans_notes mediumtext,
 	copies_bw mediumint(8) DEFAULT '0' NOT NULL,
 	copies_color mediumint(8) DEFAULT '0' NOT NULL,
-	startbal_bw mediumint(8) DEFAULT '0' NOT NULL,
 	startbal_bw mediumint(8) DEFAULT '0' NOT NULL,
 	oper_id mediumint(8) DEFAULT '0' NOT NULL,
 	PRIMARY KEY (trans_id)
